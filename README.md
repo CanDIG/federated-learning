@@ -4,7 +4,7 @@ For the development of differentially private federated machine learning on the 
 ## Quick Start
 
 0. **Pull submodule updates.** The `federated-learning` repository relies on the `mohccn-data` submodule to provide adequate synthetic data for training purposes. Pull its most recent updates with `git submodule update --init`.
-1. **Configure docker-compose.** The `docker-compose.yaml` file expects a .env file in root folder, so that it can configure the Katsu database with some secrets such as the password. For a generic configuration, you can run the following to copy and use the default configuration: `cp .default.env .env`
+1. **Configure docker-compose.** The `docker-compose.yaml` file expects a `.env` file in root folder, so that it can configure the Katsu database with some secrets such as the password. For a generic configuration, you can run the following to copy and use the default configuration: `cp .default.env .env`
 2. **Spin up Katsu.** Run `docker-compose up katsu`
 3. **Browse Katsu.** Navigate your browser to `localhost:8000`
 

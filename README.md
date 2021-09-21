@@ -3,13 +3,14 @@ For the development of differentially private federated machine learning on the 
 
 ## Quick Start
 
+0. **Pull submodule updates.** The `federated-learning` repository relies on the `mohccn-data` submodule to provide adequate synthetic data for training purposes. Pull its most recent updates with `git submodule update --init`.
 1. **Configure docker-compose.** The docker-compose.yaml file expects a .env file in root folder, so that it can configure the Katsu database with some secrets such as the password. For a generic configuration, you can run the following to copy and use the default configuration: `cp .default.env .env`
 2. **Spin up Katsu.** Run `docker-compose up katsu`
 3. **Browse Katsu.** Navigate your browser to `localhost:8000`
 
 ## Ingesting Data
 
-The `federated-learning` repository provides sample MCODE data in the `mohccn-data` submodule to ingest onto a local Katsu instance. To ingest this data, you can run
+The `federated-learning` repository provides sample MCODE data in the `mohccn-data` submodule to ingest onto a local Katsu instance. To ingest this data, you should run
  ```python
  python mohccn-data/ingest.py testproj testdset testtable http://localhost:8000 /app/chord_metadata_service/scripts/mCode_ingest_scripts.json mcodepacket
  ```

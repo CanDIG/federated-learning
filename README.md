@@ -5,8 +5,9 @@ For the development of differentially private federated machine learning on the 
 
 0. **Pull submodule updates.** The `federated-learning` repository relies on the `mohccn-data` submodule to provide adequate synthetic data for training purposes. Pull its most recent updates with `git submodule update --init`.
 1. **Configure docker-compose.** The `docker-compose.yaml` file expects a `.env` file in root folder, so that it can configure the Katsu database with some secrets such as the password. For a generic configuration, you can run the following to copy and use the default configuration: `cp .default.env .env`
-2. **Spin up Katsu.** Run `docker-compose up katsu`
-3. **Browse Katsu.** Navigate your browser to `localhost:8000`
+2. **Clone CanDIG/Katsu and build a local Docker image** The current release of CanDIG/Katsu does not support MCODE data, so you will have to build a Docker image of CanDIG/Katsu locally by first cloning the [Katsu repository](https://github.com/CanDIG/katsu) and then running ``docker build -t katsu .`` in the root folder. **Our Compose file expects a local image tagged `katsu`.**
+4. **Spin up Katsu.** Run `docker-compose up katsu`
+5. **Browse Katsu.** Navigate your browser to `localhost:8000`
 
 ## Ingesting Data
 

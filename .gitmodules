@@ -1,0 +1,3 @@
+[submodule "mohccn-data"]
+	path = mohccn-data
+	url = git@github.com:CanDIG/mohccn-data.git

@@ -18,7 +18,7 @@ services:
       context: ${KATSU_DIR}
 ```
 And then configure `KATSU_DIR` in the `.env/.default.env` file to be a relative path pointing to the cloned Katsu repo on your machine.
-## Ingesting Data
+## [Ingesting Data](ingest-data)
 
 The `federated-learning` repository provides sample MCODE data in the `mohccn-data` submodule to ingest onto a local Katsu instance. To ingest this data, you should run
  ```python
@@ -45,3 +45,9 @@ The `federated-learning` repository provides sample MCODE data in the `mohccn-da
 To run more existing services alongside Katsu, add the services to the `docker-compose.yaml` file and add their default configuration variables to `.default.env`.
 
 You can also contribute code pertaining to federated learning to this repository. Please organize new files into subdirectories. The root folder should only contain the README, configuration files, and subdirectories.
+
+## Examples
+
+We have examples in our `examples/` directory. 
+
+Currently, we only have a demo for an MCODE data workflow with Katsu. To run this, make sure you have ingested our demo data into Katsu as detailed in [Ingesting Data](#ingest-data)

@@ -18,7 +18,7 @@ services:
       context: ${KATSU_DIR}
 ```
 And then configure `KATSU_DIR` in the `.env/.default.env` file to be a relative path pointing to the cloned Katsu repo on your machine.
-## [Ingesting Data](#ingest-data)
+## Ingesting Data
 
 The `federated-learning` repository provides sample MCODE data in the `mohccn-data` submodule to ingest onto a local Katsu instance. To ingest this data, you should run
  ```python

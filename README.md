@@ -50,4 +50,4 @@ You can also contribute code pertaining to federated learning to this repository
 
 We have examples in our `examples/` directory. 
 
-Currently, we only have a demo for an MCODE data workflow with Katsu. To run this, make sure you have ingested our demo data into Katsu as detailed in [Ingesting Data](#ingest-data)
+Currently, we only have a demo for an MCODE data workflow with Katsu. To run this, make sure you have ingested our demo data into Katsu as detailed in [Ingesting Data](#ingesting-data)

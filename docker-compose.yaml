@@ -13,10 +13,13 @@ services:
     volumes:
       - katsu-db-data:/var/lib/postgresql/data
   katsu:
-    image: ghcr.io/candig/candig-katsu:latest
+    image: katsu
+    build:
+      context: ${KATSU_DIR}
     container_name: katsu
     volumes:
       - ./services/katsu/katsu_entrypoint.sh:/app/katsu_entrypoint.sh
+      - ./mohccn-data/mCode_ingest_scripts.json:/app/chord_metadata_service/scripts/mCode_ingest_scripts.json
     entrypoint: ["/app/katsu_entrypoint.sh"]
     ports:
       - "8000:8000"
@@ -28,7 +31,6 @@ services:
       POSTGRES_DATABASE: ${KATSU_POSTGRES_DB}
       POSTGRES_USER: ${KATSU_POSTGRES_USER}
       POSTGRES_PASSWORD: ${KATSU_POSTGRES_PASSWORD}
-      CANDIG_OPA_URL: http://opa:8181
     
 volumes:
   katsu-db-data:

@@ -14,6 +14,8 @@ services:
       - katsu-db-data:/var/lib/postgresql/data
   katsu:
     image: katsu
+    build:
+      context: ${KATSU_DIR}
     container_name: katsu
     volumes:
       - ./services/katsu/katsu_entrypoint.sh:/app/katsu_entrypoint.sh
@@ -29,7 +31,6 @@ services:
       POSTGRES_DATABASE: ${KATSU_POSTGRES_DB}
       POSTGRES_USER: ${KATSU_POSTGRES_USER}
       POSTGRES_PASSWORD: ${KATSU_POSTGRES_PASSWORD}
-      CANDIG_OPA_URL: http://opa:8181
     
 volumes:
   katsu-db-data:

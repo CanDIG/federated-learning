@@ -35,6 +35,12 @@ The `federated-learning` repository provides sample MCODE data in the `mohccn-da
  mcodepacket Data have been ingested from source at /app/chord_metadata_service/scripts/mCode_ingest_scripts.json
  ```
 
+## Examples
+
+We have examples in our `examples/` directory. 
+
+Currently, we only have a demo for an MCODE data workflow with Katsu. To run this, make sure you have ingested our demo data into Katsu as detailed in [Ingesting Data](#ingesting-data)
+
 ## Development
 
 To run more existing services alongside Katsu, add the services to the `docker-compose.yaml` file and add their default configuration variables to `.default.env`.

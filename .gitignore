@@ -2,3 +2,5 @@
 .env
 # Ignore any .ipynb checkpoint directories
 .ipynb
+# Ignore all files in the unzipped large synthea dataset, but keep the folder for the docker-compose volume
+synthea-1/*

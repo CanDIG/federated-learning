@@ -20,6 +20,8 @@ services:
 And then configure `KATSU_DIR` in the `.env/.default.env` file to be a relative path pointing to the cloned Katsu repo on your machine.
 ## Ingesting Data
 
+### Ingesting Single Files
+
 The `federated-learning` repository provides sample MCODE data in the `mohccn-data` submodule to ingest onto a local Katsu instance. To ingest this data, you should run
  ```python
  python mohccn-data/ingest.py testproj testdset testtable http://localhost:8000 /app/chord_metadata_service/scripts/mCode_ingest_scripts.json mcodepacket
@@ -27,9 +29,9 @@ The `federated-learning` repository provides sample MCODE data in the `mohccn-da
 
  In general, you can run 
  ```bash
-  python mohccn-data/ingest.py <PROJ_NAME> <DSET_NAME> <TABLE_NAME> <SERVER_ADDR> <DATA_PATH> <DATA_TYPE>
+  python mohccn-data/ingest.py <PROJ_NAME> <DSET_NAME> <TABLE_NAME> <SERVER_URL> <DATA_PATH> <DATA_TYPE> <MCODE_INGEST_TYPE>
  ```
- to get Katsu to ingest well-formatted MCODE or phenopacket JSON data. However, keep in mind that `<DATA_PATH>` is the absolute path of your data _on Katsu's docker container_. If you plan on supplying your own data, please edit `docker-compose.yaml` to provide the data as a volume to Katsu's container. As an example, to supply our sample data, we include
+ where MCODE_INGEST_TYPE is `fhir` if the data you are ingesting is `fhir_mcode_json` as per the [katsu documentation](https://metadata-service.readthedocs.io/en/develop/modules/introduction.html) (see #3 on FHIR MCODE data ingest). However, keep in mind that `<DATA_PATH>` is the absolute path of your data _on Katsu's docker container_. If you plan on supplying your own data, please edit `docker-compose.yaml` to provide the data as a volume to Katsu's container. As an example, to supply our sample data, we include
  ```
 - ./mohccn-data/mCode_ingest_scripts.json:/app/chord_metadata_service/scripts/mCode_ingest_scripts.json
  ```
@@ -39,6 +41,14 @@ The `federated-learning` repository provides sample MCODE data in the `mohccn-da
  ```
  mcodepacket Data have been ingested from source at /app/chord_metadata_service/scripts/mCode_ingest_scripts.json
  ```
+
+ ### Ingesting a Directory
+
+ Since `<DATA_PATH>` is the absolute path of data on the katsu Docker container, ingesting a directory can be a bit more involved. We provide a bash script `./ingestion-scripts/ingest_dir.sh` to perform this workflow. From our root directory,
+ ```bash
+ bash ./ingestion-scripts/ingest_dir.sh <PROJ_TITLE> <DSET_TITLE> <TABLE_TITLE> <SERVER_URL> <DIR_PATH> <DATA_TYPE> <MCODE_INGEST_TYPE>
+ ```
+ where MCODE_INGEST_TYPE is `fhir` if the data you are ingesting is `fhir_mcode_json` as per the [katsu documentation](https://metadata-service.readthedocs.io/en/develop/modules/introduction.html) or anything else otherwise (see #3 on FHIR MCODE data ingest). Remember again that the `<DIR_PATH>` is the absolute directory path of the data you are ingesting on katsu's Docker container.
 
 ## Development
 

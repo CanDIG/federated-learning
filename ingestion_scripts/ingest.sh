@@ -4,12 +4,6 @@
 ################################################################################
 SERVER_URL="http://localhost:8000"
 KATSU_INGESTION_DIR="/app/chord_metadata_service/ingestion_dirs/"
-docker exec -it katsu test -d "$KATSU_INGESTION_DIR" # if the ingestion_dirs directory doesn't exist, create it.
-success=$?
-if [ $success -eq 1 ] ; then
-  echo "$KATSU_INGESTION_DIR does not exist, creating now."
-  docker exec -it katsu mkdir $KATSU_INGESTION_DIR
-fi
 DIRECTORY=false
 LOCAL=false
 
@@ -72,6 +66,13 @@ if [ $# -lt 3 ];
    printf "Not enough arguments - %d. Call the script with the -h flag for details.\n" $# 
    exit 0 
 fi 
+
+docker exec -it katsu test -d "$KATSU_INGESTION_DIR" # if the ingestion_dirs directory doesn't exist, create it.
+success=$?
+if [ $success -eq 1 ] ; then
+  echo "$KATSU_INGESTION_DIR does not exist, creating now."
+  docker exec -it katsu mkdir $KATSU_INGESTION_DIR
+fi
 
 # Read in the script arguments
 table_uuid="$1"

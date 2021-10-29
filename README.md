@@ -15,36 +15,92 @@ For the development of differentially private federated machine learning on the 
 
 ## Ingesting Data
 
-### Ingesting Single Files
+The `federated-learning` repository has provided a bash script interface for you to communicate with Katsu. To ingest data, into Katsu, you must first create a project, dataset, and table in Katsu for your data to live in. The bash interface makes this a chain of straightforward commands. The bash scripts assume your Katsu container is tagged `katsu`, as is the case if you have followed the quick start thus far.
 
-The `federated-learning` repository provides sample MCODE data in the `mohccn-data` submodule to ingest onto a local Katsu instance. To ingest this data, you should run
- ```bash
- python ingestion_scripts/ingest.py testproj testdset testtable http://localhost:8000 /app/chord_metadata_service/scripts/mCode_ingest_scripts.json mcodepacket
- ```
+We have [walkthrough examples](#examples) to ingest files from our `mohccn-data` repository and the CodeX/Synthea breast cancer dataset.
+### Creating a Project
+To create a project, run
+```bash
+bash ingestion_scripts/create_project.sh <PROJECT_TITLE>
+```
+This should return a uuid that you should save to use in the next command to create a dataset. See `bash ingestion_scripts/create_project.sh -h` for details.
 
- In general, you can run 
- ```bash
-  python ingestion_scripts/ingest.py <PROJ_NAME> <DSET_NAME> <TABLE_NAME> <SERVER_URL> <DATA_PATH> <DATA_TYPE> <MCODE_INGEST_TYPE>
- ```
- where `MCODE_INGEST_TYPE` is `fhir` if the data you are ingesting is `fhir_mcode_json` as per the [katsu documentation](https://metadata-service.readthedocs.io/en/develop/modules/introduction.html) (see #3 on FHIR MCODE data ingest). However, keep in mind that `<DATA_PATH>` is the absolute path of your data _on Katsu's docker container_. If you plan on supplying your own data, please edit `docker-compose.yaml` to provide the data as a volume to Katsu's container. As an example, to supply our sample data, we include
- ```
-- ./mohccn-data/mCode_ingest_scripts.json:/app/chord_metadata_service/scripts/mCode_ingest_scripts.json
- ```
- underneath the `volumes` header for `katsu` in `docker-compose.yaml`. For more information about formatting `docker-compose.yaml` to include volumes like this, see the [short syntax for volumes in the Compose file](https://docs.docker.com/compose/compose-file/compose-file-v3/#volumes).
+### Creating a Dataset
+To create a dataset, run
+```bash
+bash ingestion_scripts/create_dataset.sh <PROJECT_UUID> <DATASET_NAME>
+```
+This should return a uuid that you should save to use in the next command to create a table. See `bash ingestion_scripts/create_dataset.sh -h` for details.
+
+### Creating a Table
+To create a table, run
+```bash
+bash ingestion_scripts/create_table.sh <DATASET_UUID> <TABLE_NAME> <TABLE_TYPE>
+```
+where `<TABLE_TYPE>` is one of "mcodepacket" or "phenopacket", depending on the type of data you expect to ingest into the table.
+This should return a uuid that you should save to use in the next command to ingest data. See `bash ingestion_scripts/create_table.sh -h` for details.
+
+### Ingesting Data
+To ingest data, use the `ingest.sh` script. Roughly speaking, the script runs as follows
+```bash
+bash ingestion_scripts/ingest.sh <TABLE_UUID> <WORKFLOW_ID> <ABSOLUTE_PATH>
+```
+Valid data ingestion workflows are: "mcode_json", "mcode_fhir_json", or "phenopackets_json".
+Ingested data may be stored locally (specify this with the -l flag) or on the Katsu's Docker container (by default). 
+The data path may specify a single file (by default), or a directory of JSON files to ingest (specify the -d) flag.
+See `bash ingestion_scripts/ingest.sh -h` for more details.
 
  After ingesting, you should see a message resembling the following
  ```
  mcodepacket Data have been ingested from source at /app/chord_metadata_service/scripts/mCode_ingest_scripts.json
  ```
 
- ### Ingesting a Directory
+We have walkthrough examples of using the `ingest.sh` script to ingest both single files and directories in our examples section below.
 
- Since `<DATA_PATH>` is the absolute path of data on the katsu Docker container, ingesting a directory can be a bit more involved. We provide a bash script `./ingestion-scripts/ingest_dir.sh` to perform this workflow. From our root directory,
- ```bash
- bash ./ingestion-scripts/ingest_dir.sh <PROJ_TITLE> <DSET_TITLE> <TABLE_TITLE> <SERVER_URL> <DIR_PATH> <DATA_TYPE> <MCODE_INGEST_TYPE>
- ```
- where `MCODE_INGEST_TYPE` is `fhir` if the data you are ingesting is `fhir_mcode_json` as per the [katsu documentation](https://metadata-service.readthedocs.io/en/develop/modules/introduction.html) or anything else otherwise (see #3 on FHIR MCODE data ingest). Remember again that the `<DIR_PATH>` is the absolute directory path of the data you are ingesting on katsu's Docker container.
 ## Examples
+
+### Ingesting Single Files
+The `federated-learning` repository provides sample MCODE data in the `mohccn-data` submodule to ingest onto a local Katsu instance. To ingest this data, we first create a project by running
+```bash
+bash ingestion_scripts/create_project.sh mohccn-test
+```
+This should return a uuid that you should save to use in the next command to create a dataset. We create this dataset by running
+```bash
+bash ingestion_scripts/create_dataset.sh <PROJECT_UUID> dataset-test
+```
+This should return a uuid that you should save to use in the next command to create a table. We create this table by running
+```bash
+bash ingestion_scripts/create_table.sh <DATASET_UUID> table-test mcodepacket
+```
+This should return a uuid that you should save to use in the next command to ingest data. Notice that we specify our table type as mcodepacket since the `mohccn-data` repository supplies MCODE data. Finally, we ingest our data from our local filesystem by running our ingest script with the `-l` flag specified.
+```bash
+bash ingestion_scripts/ingest.sh -l <TABLE_UUID> mcode_json <PATH_TO_FEDERATED_LEARNING_REPOSITORY>/mohccn-data/mCode_ingest_scripts.json
+```
+After ingesting, you should see a message resembling the following
+```
+mcodepacket Data have been ingested from source at /app/chord_metadata_service/scripts/mCode_ingest_scripts.json
+```
+
+### Ingesting Directories
+The `federated-learning` repository uses the [CodeX/Synthea-1 2000 Female Breast Cancer Synthetic MCODE Dataset](https://confluence.hl7.org/display/COD/mCODE+Test+Data) (currently this link leads to an error page) as a demo. First unzip the data by extracting the provided `synthea-1.zip` anywhere you like. To ingest this data, we first create a project by running
+```bash
+bash ingestion_scripts/create_project.sh synthea-test
+```
+This should return a uuid that you should save to use in the next command to create a dataset. We create this dataset by running
+```bash
+bash ingestion_scripts/create_dataset.sh <PROJECT_UUID> dataset-test-synthea
+```
+This should return a uuid that you should save to use in the next command to create a table. We create this table by running
+```bash
+bash ingestion_scripts/create_table.sh <DATASET_UUID> table-test-synthea mcodepacket
+```
+This should return a uuid that you should save to use in the next command to ingest data. Notice that we specify our table type as mcodepacket since the breast cancer dataset is of MCODE data. Finally, we ingest our data from our local filesystem by running our ingest script with the `-l` flag specified. We also specify the `-d` flag since we are ingesting a directory
+```bash
+bash ingestion_scripts/ingest.sh -l -d <TABLE_UUID> mcode_fhir_json <PATH_TO_SYNTHEA_DATASET>
+```
+This should successfully ingest our data.
+
+### Analyzing Data
 
 We have examples in our `examples/` directory. 
 

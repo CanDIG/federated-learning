@@ -19,7 +19,7 @@ services:
     container_name: katsu
     volumes:
       - ./services/katsu/katsu_entrypoint.sh:/app/katsu_entrypoint.sh
-      - ./ingestion_scripts:/app/chord_metadata_service/ingestion_scripts
+      - ./ingestion_scripts/internal:/app/chord_metadata_service/ingestion_scripts
       - ./mohccn-data/mCode_ingest_scripts.json:/app/chord_metadata_service/scripts/mCode_ingest_scripts.json
       - ./synthea-1:/app/chord_metadata_service/synthea-1
     entrypoint: ["/app/katsu_entrypoint.sh"]

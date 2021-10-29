@@ -82,7 +82,7 @@ mcodepacket Data have been ingested from source at /app/chord_metadata_service/s
 ```
 
 ### Ingesting Directories
-The `federated-learning` repository uses the [CodeX/Synthea-1 2000 Female Breast Cancer Synthetic MCODE Dataset](https://confluence.hl7.org/display/COD/mCODE+Test+Data) (currently this link leads to an error page) as a demo. To ingest this data, we first create a project by running
+The `federated-learning` repository uses the [CodeX/Synthea-1 2000 Female Breast Cancer Synthetic MCODE Dataset](https://confluence.hl7.org/display/COD/mCODE+Test+Data). Since this is currently a dead link as of writing, we provide a small sample of this data to ingest in the `synthea-examples` directory. To ingest this data, we first create a project by running
 ```bash
 bash ingestion_scripts/create_project.sh synthea-test
 ```
@@ -96,7 +96,7 @@ bash ingestion_scripts/create_table.sh <DATASET_UUID> table-test-synthea mcodepa
 ```
 This should return a uuid that you should save to use in the next command to ingest data. Notice that we specify our table type as mcodepacket since the breast cancer dataset is of MCODE data. Finally, we ingest our data from our local filesystem by running our ingest script with the `-l` flag specified. We also specify the `-d` flag since we are ingesting a directory
 ```bash
-bash ingestion_scripts/ingest.sh -l -d <TABLE_UUID> mcode_fhir_json <PATH_TO_SYNTHEA_DATASET>
+bash ingestion_scripts/ingest.sh -l -d <TABLE_UUID> mcode_fhir_json <PATH_TO_SYNTHEA_EXAMPLES>
 ```
 This should successfully ingest our data.
 

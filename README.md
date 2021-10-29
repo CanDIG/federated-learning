@@ -82,7 +82,7 @@ mcodepacket Data have been ingested from source at /app/chord_metadata_service/s
 ```
 
 ### Ingesting Directories
-The `federated-learning` repository uses the [CodeX/Synthea-1 2000 Female Breast Cancer Synthetic MCODE Dataset](https://confluence.hl7.org/display/COD/mCODE+Test+Data) (currently this link leads to an error page) as a demo. First unzip the data by extracting the provided `synthea-1.zip` anywhere you like. To ingest this data, we first create a project by running
+The `federated-learning` repository uses the [CodeX/Synthea-1 2000 Female Breast Cancer Synthetic MCODE Dataset](https://confluence.hl7.org/display/COD/mCODE+Test+Data) (currently this link leads to an error page) as a demo. To ingest this data, we first create a project by running
 ```bash
 bash ingestion_scripts/create_project.sh synthea-test
 ```

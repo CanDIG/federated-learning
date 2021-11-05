@@ -35,9 +35,7 @@ def create_project(katsu_server_url: str, project_title: str) -> str:
         return project_uuid
     elif r.status_code == 400:
         print(
-            "A project of title '{}' exists, please choose a different title, or delete this project.".format(
-                project_title
-            )
+            "Something else went wrong. It might be that your a table with the same name already exists or that your table name is too short."
         )
         sys.exit()
     else:

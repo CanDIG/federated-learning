@@ -33,9 +33,7 @@ def create_dataset(katsu_server_url: str, project_uuid: str, dataset_title: str)
         return dataset_uuid
     elif r2.status_code == 400:
         print(
-            "A dataset of title '{}' exists, please choose a different title, or delete this dataset.".format(
-                dataset_title
-            )
+            "Something else went wrong. It might be that your a table with the same name already exists or that your table name is too short."
         )
         sys.exit()
     else:

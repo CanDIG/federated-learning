@@ -2,4 +2,4 @@
 .env
 
 # Ignore any .ipynb checkpoint directories
-.ipynb
+**/.ipynb_checkpoints

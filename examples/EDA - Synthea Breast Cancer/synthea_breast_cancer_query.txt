@@ -1,0 +1,30 @@
+query{
+  katsuDataModels
+  {
+    mcodeDataModels
+    {
+      mcodePackets{
+        subject {
+          dateOfBirth
+          sex
+        }
+        cancerCondition {
+          dateOfDiagnosis
+        }
+        cancerRelatedProcedures {
+          code {
+            label
+          }
+        }
+        cancerDiseaseStatus {
+          label
+        }
+        medicationStatement {
+          medicationCode {
+            label
+          }
+        }
+      }
+    }
+  }
+}

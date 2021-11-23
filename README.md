@@ -102,10 +102,7 @@ This should successfully ingest our data.
 
 ### Analyzing Data
 
-We have examples in our `examples/` directory. 
-
-Currently, we only have a demo for an MCODE data workflow with Katsu. To run this, make sure you have ingested our demo data into Katsu as detailed in [Ingesting Data](#ingesting-data)
-
+We have examples in our `examples/` directory. Please see each example's directory for detailed reproduction instructions.
 ## Development
 
 To run more existing services alongside Katsu, add the services to the `docker-compose.yaml` file and add their default configuration variables to `.default.env`.

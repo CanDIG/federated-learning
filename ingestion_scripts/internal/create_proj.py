@@ -52,8 +52,8 @@ def main():
   parser.add_argument("server_url", help="The URL of Katsu Instance.")
 
   args = parser.parse_args()
-  project_name = args.project_name
-  katsu_server_url = args.server_url
+  project_name = str.strip(args.project_name)
+  katsu_server_url = str.strip(args.server_url)
 
   project_uuid = create_project(katsu_server_url, project_name)
   print(project_uuid)

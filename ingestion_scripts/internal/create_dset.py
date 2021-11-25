@@ -35,6 +35,7 @@ def create_dataset(katsu_server_url: str, project_uuid: str, dataset_title: str)
         print(
             "Something else went wrong. It might be that your a table with the same name already exists or that your table name is too short."
         )
+        print(r2.json())
         sys.exit()
     else:
         print(r2.json())
@@ -52,9 +53,9 @@ def main():
   parser.add_argument("server_url", help="The URL of Katsu Instance.")
 
   args = parser.parse_args()
-  project_uuid = args.project_uuid
-  dataset_name = args.dataset_name
-  katsu_server_url = args.server_url
+  project_uuid = str.strip(args.project_uuid)
+  dataset_name = str.strip(args.dataset_name)
+  katsu_server_url = str.strip(args.server_url)
 
   dataset_uuid = create_dataset(katsu_server_url, project_uuid, dataset_name)
   print(dataset_uuid)

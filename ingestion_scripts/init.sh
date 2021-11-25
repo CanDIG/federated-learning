@@ -16,7 +16,7 @@ help ()
    echo "Optionally runs ingest.sh on a specified file or directory."
    echo
    echo "Usage:"
-   echo "   ./init.sh [options] PROJECT_TITLE DATASET_TITLE TABLE_TITLE TABLE_TYPE"
+   echo "   ./ingestion_scripts/init.sh [options] PROJECT_TITLE DATASET_TITLE TABLE_TITLE TABLE_TYPE"
    echo "Arguments:"
    echo "   PROJECT_TITLE   The title of the newly created project."
    echo "   DATASET_TITLE   The title of the newly created dataset."
@@ -72,7 +72,7 @@ while getopts ":hd:f:s:" opt; do
 done
 shift $((OPTIND - 1))
 
-if [ $# -lt 3 ]; 
+if [ $# -lt 4 ]; 
    then 
    printf "Not enough arguments - %d. Call the script with the -h flag for details.\n" $# 
    exit 0 
@@ -109,6 +109,7 @@ echo
 echo "TABLE_UUID: " $TABLE_UUID
 echo
 
+# TODO add support for ingest.sh's -l option; ingest on or off the container/host
 # If script was run with either of the ingest options, run ingest.sh on the specified file(s)
 if [ ! -z "${ingest_filepath}" ]; then
     bash ingestion_scripts/ingest.sh -l $TABLE_UUID mcode_json ingest_filepath

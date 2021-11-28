@@ -23,7 +23,7 @@ bash create_dataset.sh <PROJ_UUID> synthea_dset
 ```
 Now we choose to make the `synthea_dset` dataset open/public for OPA. This involves editing `rego_development_playground/permissions_engine/permissions.rego` so that `synthea_dset` is contained in the `open_datasets` list. Assuming a fresh install of the `rego_development_playground`, your `open_datasets` line would look like this
 ```
-open_datasets = ["open1", "open2", "synthe_dset"]
+open_datasets = ["open1", "open2", "synthea_dset"]
 ```
 Now we can restart the services by calling `docker-compose down` and then `docker-compose up -d` in the `rego_development_playground` directory. We are ready to create our table and ingest our data.
 ```

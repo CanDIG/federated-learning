@@ -75,10 +75,10 @@ def main():
   parser.add_argument("workflow", help="The ingest workflow. Only phenopackets_json, mcode_json, and mcode_fhir_json are supported.")
   
   args = parser.parse_args()
-  table_uuid = args.table_uuid
-  katsu_server_url = args.server_url
-  data_file = args.data_path
-  workflow = args.workflow
+  table_uuid = str.strip(args.table_uuid)
+  katsu_server_url = str.strip(args.server_url)
+  data_file = str.strip(args.data_path)
+  workflow = str.strip(args.workflow)
 
   # Piping from 'ls' in the bash script creates ANSI escape sequences that need to be filtered
   ansi_escape = re.compile(r'''

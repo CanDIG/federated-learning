@@ -27,6 +27,7 @@ help ()
    echo "   -h      Display this help text"
    echo "   -d      Run ingest.sh on the specified directory after initialization"
    echo "   -f      Run ingest.sh on the specified file after intitialization"
+   echo "   -l      Path to ingestable file/dir is local, ie. located on host filepath rather than in Docker container."
    echo "   -s      Use this flag if you have a custom server url (default is http://localhost:8000)"
 }
 ################################################################################
@@ -55,10 +56,12 @@ _create_table () {
 ################################# Script start
 
 # Read in the script options
-while getopts ":hd:f:s:" opt; do
+while getopts ":hld:f:s:" opt; do
   case $opt in
     h)  help
         exit
+        ;;
+    l)  local=1
         ;;
     d)  ingest_dirpath=$OPTARG
         ;;
@@ -84,7 +87,8 @@ dset_title="$2"
 table_title="$3"
 table_type="$4"
 
-# TODO remove
+# TODO 
+echo "The following arguments have been provided:"
 echo "proj_title: " $proj_title
 echo "dset_title: "$dset_title
 echo "table_title: "$table_title
@@ -109,10 +113,23 @@ echo
 echo "TABLE_UUID: " $TABLE_UUID
 echo
 
-# TODO add support for ingest.sh's -l option; ingest on or off the container/host
 # If script was run with either of the ingest options, run ingest.sh on the specified file(s)
 if [ ! -z "${ingest_filepath}" ]; then
-    bash ingestion_scripts/ingest.sh -l $TABLE_UUID mcode_json ingest_filepath
+    if (( $local > 0 )); then
+        echo "Ingesting local file " $ingest_filepath
+        bash ingestion_scripts/ingest.sh -l $TABLE_UUID mcode_json $ingest_filepath
+    else
+        echo "Ingesting containerized file " $ingest_filepath
+        bash ingestion_scripts/ingest.sh $TABLE_UUID mcode_json $ingest_filepath
+    fi
 elif [ ! -z "${ingest_dirpath}" ]; then
-    bash ingestion_scripts/ingest.sh -l -d $TABLE_UUID mcode_fhir_json ingest_dirpath
+    if (( $local > 0 )); then
+        echo "Ingesting local dir " $ingest_dirpath
+        bash ingestion_scripts/ingest.sh -l -d $TABLE_UUID mcode_fhir_json $ingest_dirpath
+    else
+        echo "Ingesting containerized dir " $ingest_dirpath
+        bash ingestion_scripts/ingest.sh -d $TABLE_UUID mcode_fhir_json $ingest_dirpath
+    fi
 fi
+
+echo

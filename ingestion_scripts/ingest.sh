@@ -82,7 +82,7 @@ absolute_path="$3"
 if [ "$LOCAL" = true ] ; then
   echo "local flag specified. Copying path into Docker container."
   basename="$(basename $absolute_path)"
-  docker cp $absolute_path katsu:$KATSU_INGESTION_DIR$basename
+  docker cp $absolute_path katsu:$KATSU_INGESTION_DIR
   absolute_path="$KATSU_INGESTION_DIR$basename" # now absolute_path must be either the user provided Docker path or the script created one.
   echo $absolute_path
 fi

@@ -3,7 +3,7 @@
 # Constants                                                                    #
 ################################################################################
 SERVER_URL="http://localhost:8000"
-
+KATSU_TAG="katsu"
 ################################################################################
 # Help                                                                         #
 ################################################################################
@@ -32,13 +32,14 @@ help ()
 ################################################################################
 
 # Read in the script options
-while getopts ":hs:" opt; do
+while getopts ":hs:t:" opt; do
   case $opt in
     h)  help
         exit
         ;;
-    s)  echo $OPTARG
-        SERVER_URL=$OPTARG
+    s)  SERVER_URL=$OPTARG
+        ;;
+    t)  KATSU_TAG=$OPTARG
         ;;
     \?) echo "Invalid option -$OPTARG" >&2
         ;;
@@ -56,4 +57,4 @@ fi
 proj_uuid="$1"
 dset_title="$2"
 
-docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/create_dset.py $proj_uuid $dset_title $SERVER_URL
+docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion_scripts/create_dset.py $proj_uuid $dset_title $SERVER_URL

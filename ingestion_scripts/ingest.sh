@@ -3,6 +3,7 @@
 # Constants                                                                    #
 ################################################################################
 SERVER_URL="http://localhost:8000"
+KATSU_TAG="katsu"
 KATSU_INGESTION_DIR="/app/chord_metadata_service/ingestion_dirs/"
 DIRECTORY=false
 LOCAL=false
@@ -33,6 +34,7 @@ help ()
    echo "   -d      Use this flag if the path being provided specifies a directory of JSON files to ingest."
    echo "   -l      Use this flag if the path being provided is on the local machine rather than the Katsu Docker container."
    echo "   -s      Use this flag if you have a custom server url (default is http://localhost:8000)"
+   echo "   -t      Use this flag if you have a custom katsu container tag (default is 'katsu')"
    echo "Returns:"
    echo "   _"
 }
@@ -43,7 +45,7 @@ help ()
 ################################################################################
 
 # Read in the script options
-while getopts ":hlds:" opt; do
+while getopts ":hlds:t:" opt; do
   case $opt in
     h)  help
         exit
@@ -52,8 +54,9 @@ while getopts ":hlds:" opt; do
         ;;
     d)  DIRECTORY=true
         ;;
-    s)  echo $OPTARG
-        SERVER_URL=$OPTARG
+    s)  SERVER_URL=$OPTARG
+        ;;
+    t)  KATSU_TAG=$OPTARG
         ;;
     \?) echo "Invalid option -$OPTARG" >&2
         ;;
@@ -66,12 +69,11 @@ if [ $# -lt 3 ];
    printf "Not enough arguments - %d. Call the script with the -h flag for details.\n" $# 
    exit 0 
 fi 
-
-docker exec -it katsu test -d "$KATSU_INGESTION_DIR" # if the ingestion_dirs directory doesn't exist, create it.
+docker exec -it $KATSU_TAG test -d "$KATSU_INGESTION_DIR" # if the ingestion_dirs directory doesn't exist, create it.
 success=$?
 if [ $success -eq 1 ] ; then
   echo "$KATSU_INGESTION_DIR does not exist, creating now."
-  docker exec -it katsu mkdir $KATSU_INGESTION_DIR
+  docker exec -it $KATSU_TAG mkdir $KATSU_INGESTION_DIR
 fi
 
 # Read in the script arguments
@@ -82,7 +84,7 @@ absolute_path="$3"
 if [ "$LOCAL" = true ] ; then
   echo "local flag specified. Copying path into Docker container."
   basename="$(basename $absolute_path)"
-  docker cp $absolute_path katsu:$KATSU_INGESTION_DIR$basename
+  docker cp $absolute_path $KATSU_TAG:$KATSU_INGESTION_DIR
   absolute_path="$KATSU_INGESTION_DIR$basename" # now absolute_path must be either the user provided Docker path or the script created one.
   echo $absolute_path
 fi
@@ -91,11 +93,11 @@ if [ "$DIRECTORY" = true ]
 then
   echo "directory flag specified."
 
-  for file in $(docker exec -it katsu \ls $absolute_path) ; do # here we loop through all files in the directory path.
+  for file in $(docker exec -it $KATSU_TAG \ls $absolute_path) ; do # here we loop through all files in the directory path.
     datapath="$absolute_path/$file"
-    docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/ingest_file.py $table_uuid $datapath $SERVER_URL $workflow_id
+    docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion_scripts/ingest_file.py $table_uuid $datapath $SERVER_URL $workflow_id
   done
 else
   echo "no directory flag specified."
-  docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/ingest_file.py $table_uuid $absolute_path $SERVER_URL $workflow_id
+  docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion_scripts/ingest_file.py $table_uuid $absolute_path $SERVER_URL $workflow_id
 fi

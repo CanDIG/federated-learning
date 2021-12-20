@@ -52,9 +52,9 @@ def main():
   parser.add_argument("server_url", help="The URL of Katsu Instance.")
 
   args = parser.parse_args()
-  project_uuid = args.project_uuid
-  dataset_name = args.dataset_name
-  katsu_server_url = args.server_url
+  project_uuid = str.strip(args.project_uuid)
+  dataset_name = str.strip(args.dataset_name)
+  katsu_server_url = str.strip(args.server_url)
 
   dataset_uuid = create_dataset(katsu_server_url, project_uuid, dataset_name)
   print(dataset_uuid)

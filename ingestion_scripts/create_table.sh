@@ -3,7 +3,7 @@
 # Constants                                                                    #
 ################################################################################
 SERVER_URL="http://localhost:8000"
-
+KATSU_TAG="katsu"
 ################################################################################
 # Help                                                                         #
 ################################################################################
@@ -24,6 +24,7 @@ help ()
    echo "Options:"
    echo "   -h      Display this help text"
    echo "   -s      Use this flag if you have a custom server url (default is http://localhost:8000)"
+   echo "   -t      Use this flag if you have a custom docker tag (default is 'katsu'"
    echo "Returns:"
    echo "   _"
 }
@@ -34,13 +35,14 @@ help ()
 ################################################################################
 
 # Read in the script options
-while getopts ":hs:" opt; do
+while getopts ":hs:t:" opt; do
   case $opt in
     h)  help
         exit
         ;;
-    s)  echo $OPTARG
-        SERVER_URL=$OPTARG
+    s)  SERVER_URL=$OPTARG
+        ;;
+    t)  KATSU_TAG=$OPTARG
         ;;
     \?) echo "Invalid option -$OPTARG" >&2
         ;;
@@ -59,4 +61,4 @@ dset_uuid="$1"
 table_title="$2"
 table_type="$3"
 
-docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/create_table.py $dset_uuid $table_title $table_type $SERVER_URL
+docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion_scripts/create_table.py $dset_uuid $table_title $table_type $SERVER_URL

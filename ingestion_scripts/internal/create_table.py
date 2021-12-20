@@ -42,10 +42,10 @@ def main():
   parser.add_argument("server_url", help="The URL of Katsu Instance.")
 
   args = parser.parse_args()
-  dataset_uuid = args.dataset_uuid
-  table_name = args.table
-  katsu_server_url = args.server_url
-  data_type = args.data_type
+  dataset_uuid = str.strip(args.dataset_uuid)
+  table_name = str.strip(args.table)
+  katsu_server_url = str.strip(args.server_url)
+  data_type = str.strip(args.data_type)
 
   if data_type not in ['phenopacket', 'mcodepacket']:
       print("Table data type must be either phenopacket or mcodepacket.")

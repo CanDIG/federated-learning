@@ -1,10 +1,19 @@
 import argparse
 
 def create_docker_compose_string(initial_port: int, scale: int):
-    template_top = """
+    template_top = f"""
 version: '3'
 services:
+
+    fl-server:
+        build: fl-server
+        container_name: fl-server
+        ports:
+        - "{initial_port}:8080"
+        environment:
+            GRAPHQL_INTERFACE_URL: "http://gql-interface-0:7999/graphql"
     """
+    initial_port += 1
     template_middle = """
 volumes:
     """
@@ -14,6 +23,7 @@ volumes:
     print(graphql_ports)
     print("Your Katsu instances are located at: ")
     print(katsu_ports)
+    flower_server_url = "fl-server:8080"
     services_string = template_top
     volume_string = template_middle
     for cur_num in range(scale):
@@ -26,9 +36,9 @@ volumes:
         image: postgres:latest
         container_name: db-katsu-{cur_num}
         environment:
-            POSTGRES_DB: ${{KATSU_POSTGRES_DB}}
-            POSTGRES_USER: ${{KATSU_POSTGRES_USER}}
-            POSTGRES_PASSWORD: ${{KATSU_POSTGRES_PASSWORD}}
+            POSTGRES_DB: "${{KATSU_POSTGRES_DB:-metadata}}"
+            POSTGRES_USER: "${{KATSU_POSTGRES_USER:-admin}}"
+            POSTGRES_PASSWORD: "${{KATSU_POSTGRES_PASSWORD:-admin}}"
         ports:
         - "{db_katsu_port}:5432"
         volumes:
@@ -48,9 +58,9 @@ volumes:
         environment:
             POSTGRES_HOST: "db-katsu-{cur_num}"
             POSTGRES_PORT: 5432
-            POSTGRES_DATABASE: ${{KATSU_POSTGRES_DB}}
-            POSTGRES_USER: ${{KATSU_POSTGRES_USER}}
-            POSTGRES_PASSWORD: ${{KATSU_POSTGRES_PASSWORD}}
+            POSTGRES_DATABASE: "${{KATSU_POSTGRES_DB:-metadata}}"
+            POSTGRES_USER: "${{KATSU_POSTGRES_USER:-admin}}"
+            POSTGRES_PASSWORD: "${{KATSU_POSTGRES_PASSWORD:-admin}}"
 
     gql-interface-{cur_num}:
         build: gql-interface
@@ -60,6 +70,15 @@ volumes:
         environment:
             CANDIG_SERVER: "http://candig-dev:4000"
             KATSU_API: "http://katsu-{cur_num}:8000/api"
+
+    fl-client-{cur_num}:
+        build: fl-client
+        container_name: fl-client-{cur_num}
+        depends_on:
+        - fl-server
+        environment:
+            FLOWER_SERVER_URL: "{flower_server_url}"
+            GRAPHQL_INTERFACE_URL: "http://gql-interface-{cur_num}:7999/graphql"
         """
         template_volumes = f"""
     katsu-db-data-{cur_num}:

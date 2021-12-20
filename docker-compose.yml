@@ -1,0 +1,114 @@
+
+version: '3'
+services:
+
+    fl-server:
+        build: fl-server
+        container_name: fl-server
+        ports:
+        - "5000:8080"
+        environment:
+            GRAPHQL_INTERFACE_URL: "http://gql-interface-0:7999/graphql"
+    
+    db-katsu-0:
+        image: postgres:latest
+        container_name: db-katsu-0
+        environment:
+            POSTGRES_DB: "${KATSU_POSTGRES_DB:-metadata}"
+            POSTGRES_USER: "${KATSU_POSTGRES_USER:-admin}"
+            POSTGRES_PASSWORD: "${KATSU_POSTGRES_PASSWORD:-admin}"
+        ports:
+        - "5001:5432"
+        volumes:
+        - katsu-db-data-0:/var/lib/postgresql/data
+
+    katsu-0:
+        build: katsu
+        container_name: katsu-0
+        volumes:
+        - ./services/katsu/katsu_entrypoint.sh:/app/katsu_entrypoint.sh
+        - ../federated-learning/ingestion_scripts/internal:/app/chord_metadata_service/ingestion_scripts
+        entrypoint: ["/app/katsu_entrypoint.sh"]
+        ports:
+        - "5002:8000"
+        depends_on:
+        - db-katsu-0
+        environment:
+            POSTGRES_HOST: "db-katsu-0"
+            POSTGRES_PORT: 5432
+            POSTGRES_DATABASE: "${KATSU_POSTGRES_DB:-metadata}"
+            POSTGRES_USER: "${KATSU_POSTGRES_USER:-admin}"
+            POSTGRES_PASSWORD: "${KATSU_POSTGRES_PASSWORD:-admin}"
+
+    gql-interface-0:
+        build: gql-interface
+        container_name: gql-interface-0
+        ports:
+        - "5003:7999"
+        environment:
+            CANDIG_SERVER: "http://candig-dev:4000"
+            KATSU_API: "http://katsu-0:8000/api"
+
+    fl-client-0:
+        build: fl-client
+        container_name: fl-client-0
+        depends_on:
+        - fl-server
+        environment:
+            FLOWER_SERVER_URL: "fl-server:8080"
+            GRAPHQL_INTERFACE_URL: "http://gql-interface-0:7999/graphql"
+        
+    db-katsu-1:
+        image: postgres:latest
+        container_name: db-katsu-1
+        environment:
+            POSTGRES_DB: "${KATSU_POSTGRES_DB:-metadata}"
+            POSTGRES_USER: "${KATSU_POSTGRES_USER:-admin}"
+            POSTGRES_PASSWORD: "${KATSU_POSTGRES_PASSWORD:-admin}"
+        ports:
+        - "5004:5432"
+        volumes:
+        - katsu-db-data-1:/var/lib/postgresql/data
+
+    katsu-1:
+        build: katsu
+        container_name: katsu-1
+        volumes:
+        - ./services/katsu/katsu_entrypoint.sh:/app/katsu_entrypoint.sh
+        - ../federated-learning/ingestion_scripts/internal:/app/chord_metadata_service/ingestion_scripts
+        entrypoint: ["/app/katsu_entrypoint.sh"]
+        ports:
+        - "5005:8000"
+        depends_on:
+        - db-katsu-1
+        environment:
+            POSTGRES_HOST: "db-katsu-1"
+            POSTGRES_PORT: 5432
+            POSTGRES_DATABASE: "${KATSU_POSTGRES_DB:-metadata}"
+            POSTGRES_USER: "${KATSU_POSTGRES_USER:-admin}"
+            POSTGRES_PASSWORD: "${KATSU_POSTGRES_PASSWORD:-admin}"
+
+    gql-interface-1:
+        build: gql-interface
+        container_name: gql-interface-1
+        ports:
+        - "5006:7999"
+        environment:
+            CANDIG_SERVER: "http://candig-dev:4000"
+            KATSU_API: "http://katsu-1:8000/api"
+
+    fl-client-1:
+        build: fl-client
+        container_name: fl-client-1
+        depends_on:
+        - fl-server
+        environment:
+            FLOWER_SERVER_URL: "fl-server:8080"
+            GRAPHQL_INTERFACE_URL: "http://gql-interface-1:7999/graphql"
+        
+volumes:
+    
+    katsu-db-data-0:
+        
+    katsu-db-data-1:
+        

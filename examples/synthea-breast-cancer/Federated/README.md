@@ -15,7 +15,7 @@ Restarting with `docker compose up` will allow you to view a completed federated
 Allow the server and clients approximately 1 minute to finish querying and preprocessing data from the GraphQL interface before training begins.
 
 The data preprocessing follows the same procedure as in `Non-FederatedClassification.ipynb`, so there is not much data to work with due to poor class distribution in the Synthea dataset
-for this particular experimental setup. You should see the accuracy of the classifier stay at a constant value (between 0.6 and 0.71 depending on random seed) for every round past the 2nd, with the loss tapering off very quickly (as soon as the 3rd round).
+for this particular experimental setup. You should see the accuracy and AUC score of the classifier stay at constant values (0.6 and 0.71, but this may vary on random seeds) for every round past the 2nd, with the loss tapering off very quickly (as soon as the 3rd round).
 
 This particular demo showcases how federated learning *can* be run on the CanDIG microservices architecture, but a stronger experimental setup is required to truly investigate feasibility and
 true gains/losses due to learning from oncological data in this decentralized manner.

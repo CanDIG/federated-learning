@@ -1,3 +1,5 @@
+# Adapted from https://github.com/adap/flower/tree/main/examples/sklearn-logreg-mnist
+
 import flwr as fl
 import numpy as np
 import utils

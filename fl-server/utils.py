@@ -1,3 +1,5 @@
+# Adapted from https://github.com/adap/flower/tree/main/examples/sklearn-logreg-mnist
+
 from typing import Tuple, Union, List
 import numpy as np
 import pandas as pd

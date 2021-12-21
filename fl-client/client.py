@@ -1,3 +1,5 @@
+# Adapted from https://github.com/adap/flower/tree/main/examples/sklearn-logreg-mnist
+
 import os
 SERVER_URL = os.environ['FLOWER_SERVER_URL']
 

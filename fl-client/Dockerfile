@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:latest
+# miniforge is necessary for ML library installations to succeed in Docker on M1 machines. It also will work fine with Intel and AMD machines.
 FROM condaforge/miniforge3:latest
 ADD . /code
 WORKDIR /code

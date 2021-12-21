@@ -9,7 +9,6 @@ USER root
 
 RUN apt update
 
-# TODO: remove unneeded dependencies
 RUN conda install --file conda-requirements.txt \
     && pip install -r requirements.txt
 

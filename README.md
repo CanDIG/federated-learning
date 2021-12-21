@@ -3,9 +3,8 @@ For the development of differentially private federated machine learning on the 
 
 ## Dependencies
 1. **Clone CanDIG/Katsu** The current release of CanDIG/Katsu does not support MCODE data, so you will have to build a Docker image of CanDIG/Katsu locally by first cloning the [Katsu repository](https://github.com/CanDIG/katsu). Configure `KATSU_DIR` in your .env fiel to point to the `katsu` repo on your machine.
-2. **Pull submodule updates.** The `federated-learning` repository relies on the `mohccn-data` submodule to provide adequate synthetic data for training purposes. Pull its most recent updates with the following two commands:
-- Navigate to the `katsu` repo and run `git submodule update --init`
-- Navigate to the `federated-learning` repo and run `git submodule update --init`
+2. **Pull submodule updates.** The `federated-learning` repository relies on the `mohccn-data` submodule to provide adequate synthetic data for training purposes. Pull its most recent updates with the following command:
+- Navigate to the `katsu` repo and run `git submodule update --init --recursive`
 
 ## Quick Start
 

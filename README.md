@@ -3,7 +3,7 @@ For the development of differentially private federated machine learning on the 
 
 ## Dependencies
 1. **Pull submodule updates.** The `federated-learning` repository relies on the `mohccn-data` submodule to provide adequate synthetic data for training purposes. Pull its most recent updates with the following command:
-- Navigate to the `katsu` repo and run `git submodule update --init --recursive`
+- Navigate to the root of the repo and run `git submodule update --init --recursive`
 
 ## Quick Start
 

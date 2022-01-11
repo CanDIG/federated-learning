@@ -3,3 +3,9 @@
 
 # Ignore any .ipynb checkpoint directories
 **/.ipynb_checkpoints
+
+# Ignore the generic name of the Synthea/CodeX breast cancer dataset downloadable here: https://confluence.hl7.org/display/COD/mCODE+Test+Data
+10yrs
+
+# Ignore OSX Desktop Services Store file
+.DS_Store

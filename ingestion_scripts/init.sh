@@ -1,8 +1,4 @@
 #!/bin/bash 
-################################################################################
-# Constants                                                                    #
-################################################################################
-SERVER_URL="http://localhost:8000"
 
 ################################################################################
 # Help                                                                         #
@@ -28,7 +24,8 @@ help ()
    echo "   -d      Run ingest.sh on the specified directory after initialization"
    echo "   -f      Run ingest.sh on the specified file after intitialization"
    echo "   -l      Path to ingestable file/dir is local, ie. located on host filepath rather than in Docker container."
-   echo "   -s      Use this flag if you have a custom server url (default is http://localhost:8000)"
+   echo "   -s      Use this flag if you have a custom Katsu server url. Default http://localhost:8000"
+   echo "   -t      Specify the ingestion strategy. Currently supports {mcode_json, mcode_fhir_json}. Default: mcode_fhir_json"
 }
 ################################################################################
 ################################################################################
@@ -39,24 +36,29 @@ help ()
 # Creates a project in Katsu
 # Outputs the UUID of the created project
 _create_project () {
-    docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/create_proj.py $proj_title $SERVER_URL
+    docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/create_proj.py $proj_title $server_url
 }
 
 # Creates a dataset in Katsu
 # Outputs the UUID of the created dataset
 _create_dset () {
-    docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/create_dset.py $PROJ_UUID $dset_title $SERVER_URL
+    docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/create_dset.py $PROJ_UUID $dset_title $server_url
 }
 # Creates a dataset in Katsu
 # Outputs the UUID of the created table
 _create_table () {
-    docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/create_table.py $DSET_UUID $table_title $table_type $SERVER_URL
+    docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/create_table.py $DSET_UUID $table_title $table_type $server_url
 }
+
+################################# Variable default values
+
+server_url="http://localhost:8000"
+ingest_strategy="mcode_fhir_json"
 
 ################################# Script start
 
 # Read in the script options
-while getopts ":hld:f:s:" opt; do
+while getopts ":hld:f:s:t:" opt; do
   case $opt in
     h)  help
         exit
@@ -67,7 +69,9 @@ while getopts ":hld:f:s:" opt; do
         ;;
     f)  ingest_filepath=$OPTARG
         ;;
-    s)  SERVER_URL=$OPTARG
+    s)  server_url=$OPTARG
+        ;;
+    t)  ingest_strategy=$OPTARG
         ;;
     \?) echo "Invalid option -$OPTARG" >&2
         ;;
@@ -87,7 +91,7 @@ dset_title="$2"
 table_title="$3"
 table_type="$4"
 
-# TODO 
+# TODO remove
 echo "The following arguments have been provided:"
 echo "proj_title: " $proj_title
 echo "dset_title: "$dset_title
@@ -117,18 +121,18 @@ echo
 if [ ! -z "${ingest_filepath}" ]; then
     if (( $local > 0 )); then
         echo "Ingesting local file " $ingest_filepath
-        bash ingestion_scripts/ingest.sh -l $TABLE_UUID mcode_json $ingest_filepath
+        bash ingestion_scripts/ingest.sh -l $TABLE_UUID $ingest_strategy $ingest_filepath
     else
         echo "Ingesting containerized file " $ingest_filepath
-        bash ingestion_scripts/ingest.sh $TABLE_UUID mcode_json $ingest_filepath
+        bash ingestion_scripts/ingest.sh $TABLE_UUID $ingest_strategy $ingest_filepath
     fi
 elif [ ! -z "${ingest_dirpath}" ]; then
     if (( $local > 0 )); then
         echo "Ingesting local dir " $ingest_dirpath
-        bash ingestion_scripts/ingest.sh -l -d $TABLE_UUID mcode_fhir_json $ingest_dirpath
+        bash ingestion_scripts/ingest.sh -l -d $TABLE_UUID $ingest_strategy $ingest_dirpath
     else
         echo "Ingesting containerized dir " $ingest_dirpath
-        bash ingestion_scripts/ingest.sh -d $TABLE_UUID mcode_fhir_json $ingest_dirpath
+        bash ingestion_scripts/ingest.sh -d $TABLE_UUID $ingest_strategy $ingest_dirpath
     fi
 fi
 

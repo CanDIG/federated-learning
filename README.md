@@ -12,6 +12,7 @@ For the development of differentially private federated machine learning on the 
 1. **Configure docker-compose.** The `docker-compose.yaml` file expects a `.env` file in root folder, so that it can configure the Katsu database with some secrets such as the password. For a generic configuration, you can run the following to copy and use the default configuration: `cp .default.env .env`
 2. **Spin up Katsu.** Run `docker-compose up katsu`
 3. **Browse Katsu.** Navigate your browser to `localhost:8000`
+4. **Query Katsu** by GETting from `localhost:8000/api/mcodepackets`. There will be zero results (`"count": 0`) prior to ingest, and a number of results equal to the dataset size following ingest.
 
 ## Ingest
 
@@ -30,12 +31,25 @@ To create a Project, Dataset, and Table, and ingest a locally-stored directory s
 ./ingestion_scripts/init.sh -l -d <PATH_TO_LOCAL_INGESTABLE_DIR> <PROJECT_TITLE> <DATASET_TITLE> <TABLE_TITLE> <TABLE_TYPE>
 ```
 
-For example, the following command ingests all files in the local `synthea-examples` directory as `mcodepackets` into the `test_` project/dataset/table.
+Note that you can exclude the `-d`/`-f` options to simply intialize the database without actually running the ingestion, then run `./ingestion_scripts/ingest.sh` to do the ingest in a later step.
+
+#### Synthea/CodeX Synthetic Breast Cancer MCODE dataset
+
+The dataset currently being used for training can be browsed [here](https://confluence.hl7.org/display/COD/mCODE+Test+Data) under `Approx. 2,000 Patient Records with 10 Years of Medical History`. Or, just clicl this direct download [link](http://hdx.mitre.org/downloads/mcode/mcode1_0_10yrs.zip).
+
+Once downloaded, unzip the folder and move the `10yrs` subdirectory into the `federated-learning` project root, or wherever you prefer.
+
+The following command ingests all files in the local `10yrs/female` directory as `mcodepackets` into the `test_` project/dataset/table.
 ```bash
-./ingestion_scripts/init.sh -l -d ./synthea-examples test_proj test_dataset test_table mcodepacket
+./ingestion_scripts/init.sh -l -d 10yrs/female test_proj test_dataset test_table mcodepacket
 ```
 
-Note that you can exclude the `-d`/`-f` options to simply intialize the database without actually running the ingestion, then run `./ingestion_scripts/ingest.sh` to do the ingest in a later step.
+The EDA and model training files in this repository were done using only the data in the `female` subdirectory. If you wish to ingest all of the `female`, `male`, and `assorted` data together (thereby increasing the corpus size) simply move all of the files together into a single folder and ingest that folder:
+```bash
+cp 10yrs/female/* 10yrs/male/* 10yrs/assorted/* 10yrs
+rmdir 10yrs/female 10yrs/male 10yrs/assorted
+./ingestion_scripts/init.sh -l -d 10yrs test_proj test_dataset test_table mcodepacket
+```
 
 ### Manual Ingest
 

@@ -4,13 +4,13 @@ Running this experimental setup is straightforward. First, make sure that all su
 ```
 git submodule update --init --recursive
 ```
-Then, *from the root level of the `federated-learning` repository*, run `quickstart.sh`, providing the only argument as the absolute path of the Synthea dataset on your local machine.
+Then, *from the root level of the `federated-learning` repository*, run `quickstart.sh`, providing the only arguments as the absolute path of the [Synthea/CodeX breast cancer dataset](https://confluence.hl7.org/display/COD/mCODE+Test+Data) on your local machine and the number of sites/instances you want (we recommend 2).
 ```
-bash examples/synthea-breast-cancer/Federated/quickstart.sh <PATH_TO_SYNTHEA_DSET>
+bash examples/synthea-breast-cancer/Federated/quickstart.sh <PATH_TO_SYNTHEA_DSET> <NUM_SITES>
 ```
 
 After a long ingestion process (~10 minutes), the script will terminate the docker-compose service. 
-Restarting with `docker compose up` will allow you to view a completed federated learning training process in action, for 100 rounds of training between two clients on the same training data per site.
+Restarting with `docker-compose up` will allow you to view a completed federated learning training process in action, for 100 rounds of training between the clients on the same training data per site.
 
 Allow the server and clients approximately 1 minute to finish querying and preprocessing data from the GraphQL interface before training begins.
 

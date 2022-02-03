@@ -1,15 +1,12 @@
 # federated-learning
 For the development of differentially private federated machine learning on the CanDIG data services
 
-## Dependencies
-1. **Pull submodule updates.** The `federated-learning` repository relies on the `mohccn-data` submodule to provide adequate synthetic data for training purposes. Pull its most recent updates with the following command:
-- Navigate to the root of the repo and run `git submodule update --init --recursive`
-
 ## Quick Start
 
-1. **Configure docker-compose.** The `docker-compose.yaml` file expects a `.env` file in root folder, so that it can configure the Katsu database with some secrets such as the password. For a generic configuration, defaults are already specified in the `docker-compose.yml` file.
-2. **Spin up Katsu.** Run `docker-compose up katsu`
-3. **Browse Katsu.** Navigate your browser to `localhost:5002`
+1. **Pull submodule updates.** The `federated-learning` repository relies on various other repositories for providing the backend data services, interfaces, and training data. From the root of this repo, pull these repositories with `git submodule update --init --recursive`
+2. **Configure docker-compose.** The `docker-compose.yaml` file expects a `.env` file in root folder, so that it can configure the Katsu database with some secrets such as the password. For a generic configuration, defaults are already specified in the `docker-compose.yml` file.
+3. **Spin up Katsu.** Run `docker-compose up katsu`
+4. **Browse Katsu.** Navigate your browser to `localhost:5002`
 
 ## Ingesting Data
 

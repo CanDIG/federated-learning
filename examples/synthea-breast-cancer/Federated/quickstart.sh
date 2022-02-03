@@ -2,7 +2,7 @@
 ################################################################################
 # Constants                                                                    #
 ################################################################################
-SLEEP_TIME=20
+SLEEP_TIME=40
 PROJECT_NAME="synthea-project"
 DATASET_NAME="synthea-dataset"
 TABLE_NAME="synthea-table"
@@ -18,9 +18,10 @@ help ()
    echo "Ingests a file or directory into an existing, compatible table in Katsu's data service."
    echo
    echo "Usage:"
-   echo "   bash ingest_file.sh [options] PROJECT_TITLE DATASET_TITLE TABLE_TITLE WORKFLOW_ID ABSOLUTE_DATAPATH"
+   echo "   bash ingest_file.sh [options] PROJECT_TITLE DATASET_TITLE TABLE_TITLE WORKFLOW_ID SYNTHEA_PATH NUM_SITES"
    echo "Arguments:"
    echo "   SYNTHEA_PATH      The absolute path of the Synthea breast cancer dataset on your workstation."
+   echo "   NUM_SITES         The number of federated learning sites/clients to generate"
    echo "Options:"
    echo "   -h      Display this help text"
 }
@@ -49,38 +50,58 @@ if [ $# -lt 1 ];
 fi
 
 SYNTHEA_PATH=$1
+NUM_SITES=$2
+echo "The following arguments have been provided:"
+echo "      SYNTHEA_PATH: ${SYNTHEA_PATH}"
+echo "      NUM_SITES: ${NUM_SITES}"
 
-python3 ./configure_docker_compose.py 5000 2
+python3 ./configure_docker_compose.py 5000 ${NUM_SITES}
 
-docker compose up -d
+docker-compose up -d
 
 
 echo "Sleeping for $SLEEP_TIME seconds to let Docker containers complete initialization process."
 sleep ${SLEEP_TIME}
 
-proj0=$(bash ./ingestion_scripts/create_project.sh -t katsu-0 ${PROJECT_NAME})
-dset0=$(bash ./ingestion_scripts/create_dataset.sh -t katsu-0 ${proj0} ${DATASET_NAME})
-table0=$(bash ./ingestion_scripts/create_table.sh -t katsu-0 ${dset0} ${TABLE_NAME} mcodepacket)
+# Create arrays to contain the uuids of the new projects, datasets, and tables
+# The contents of these arrays will be indexed by the numbered site that the uuid pertains to
+# ie. a project injested into katsu-1 will have it's uuid stored in ${proj_uuids[1]}
+proj_uuids=()
+dset_uuids=()
+table_uuids=()
 
-proj1=$(bash ./ingestion_scripts/create_project.sh -t katsu-1 ${PROJECT_NAME})
-dset1=$(bash ./ingestion_scripts/create_dataset.sh -t katsu-1 ${proj1} ${DATASET_NAME})
-table1=$(bash ./ingestion_scripts/create_table.sh -t katsu-1 ${dset1} ${TABLE_NAME} mcodepacket)
+echo "Generating a project, dataset, and table into each katsu instance. The following names will be used:"
+echo "      PROJECT_NAME: ${PROJECT_NAME}"
+echo "      DATASET_NAME: ${DATASET_NAME}"
+echo "      TABLE_NAME: ${TABLE_NAME}"
+for ((s=0; s<$NUM_SITES; s++))
+do
+    proj_uuids+=($(bash ./ingestion_scripts/create_project.sh -t katsu-${s} ${PROJECT_NAME}))
+    dset_uuids+=($(bash ./ingestion_scripts/create_dataset.sh -t katsu-${s} ${proj_uuids[${s}]} ${DATASET_NAME}))
+    table_uuids+=($(bash ./ingestion_scripts/create_table.sh -t katsu-${s} ${dset_uuids[${s}]} ${TABLE_NAME} mcodepacket))
 
-echo "The table you should ingest data into on katsu-0 is ${table0}"
-echo "The table you should ingest data into on katsu-1 is ${table1}"
-echo "Would you like quickstart to attempt to ingest files in ${SYNTHEA_PATH} to katsu-0 and katsu-1? [y/N]"
+    echo "The table you should ingest data into on katsu-${s} is ${table_uuids[${s}]}"
+done
+
+echo "Would you like quickstart to attempt to ingest files in ${SYNTHEA_PATH} into all katsu instances? [y/N]"
 
 read res
 
 if [ $res == "y" ]
 then
     echo "Proceeding with automatic ingest from folder ${SYNTHEA_PATH}"
-    bash ./ingestion_scripts/ingest.sh -t katsu-0 -l -d ${table0} mcode_fhir_json ${SYNTHEA_PATH}
-    bash ./ingestion_scripts/ingest.sh -t katsu-1 -l -d ${table1} mcode_fhir_json ${SYNTHEA_PATH}
-    echo "Completed ingest attempt. Turning down docker compose services."
+    for ((s=0; s<$NUM_SITES; s++))
+    do
+        bash ./ingestion_scripts/ingest.sh -t katsu-${s} -l -d ${table_uuids[${s}]} mcode_fhir_json ${SYNTHEA_PATH}
+        echo "Completed attempt to ingest into katsu-${s}. Migrating its database..."
+        docker-compose up -d katsu-${s}
+    done
+    echo "Sleeping for $SLEEP_TIME seconds to let katsu instances complete migration."
+    sleep ${SLEEP_TIME}
+    echo "Completed all ingest and migration attempts. Turning down docker compose services."
 
-    docker compose down
+    docker-compose down
 else
     echo "Not ingesting. Turning down docker compose services."
-    docker compose down
+    docker-compose down
 fi

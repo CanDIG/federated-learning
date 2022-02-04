@@ -105,7 +105,7 @@ def main():
     parser = argparse.ArgumentParser(description=info)
 
     parser.add_argument("starting_port", help="The start port at which any localhost ports will be assigned. We recommend 5001.")
-    parser.add_argument("scale", help="How many client instances that should be created. Each instance contains  docker containers. We recommend 3.")
+    parser.add_argument("scale", help="How many client instances that should be created. Each instance contains 4 docker containers. We recommend 2.")
     
     args = parser.parse_args()
     starting_port = int(args.starting_port)

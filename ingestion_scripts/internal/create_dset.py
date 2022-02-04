@@ -35,6 +35,7 @@ def create_dataset(katsu_server_url: str, project_uuid: str, dataset_title: str)
         print(
             "Something else went wrong. It might be that your a table with the same name already exists or that your table name is too short."
         )
+        print(r2.json())
         sys.exit()
     else:
         print(r2.json())

@@ -1,6 +1,6 @@
 [submodule "services/gql-interface"]
 	path = services/gql-interface
-	url = git@github.com:CanDIG/GraphQL-interface.git
+	url = https://github.com/CanDIG/GraphQL-interface
 [submodule "services/katsu"]
 	path = services/katsu
-	url = git@github.com:CanDIG/katsu
+	url = https://github.com/CanDIG/katsu

@@ -1,6 +1,8 @@
 # federated-learning
 For the development of differentially private federated machine learning on the CanDIG data services
 
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
+
 ## Quick Start
 
 1. **Pull submodule updates.** The `federated-learning` repository relies on various other repositories for providing the backend data services, interfaces, and training data. From the root of this repo, pull these repositories with `git submodule update --init --recursive`
@@ -34,9 +36,9 @@ The dataset currently being used for training can be browsed [here](https://conf
 
 Once downloaded, unzip the folder and move the `10yrs` subdirectory into the `federated-learning` project root, or wherever you prefer.
 
-The following command ingests all files in the local `10yrs/female` directory as `mcodepackets` into the `test_` project/dataset/table.
+The following command ingests all files in the local `10yrs/female` directory as `mcodepackets` into the `synthea_` project/dataset/table.
 ```bash
-./ingestion_scripts/init.sh -l -d 10yrs/female test_proj test_dataset test_table mcodepacket
+./ingestion_scripts/init.sh -l -d 10yrs/female synthea_proj synthea_dataset synthea_table mcodepacket
 ```
 
 The EDA and model training files in this repository were done using only the data in the `female` subdirectory. If you wish to ingest all of the `female`, `male`, and `assorted` data together (thereby increasing the corpus size) simply move all of the files together into a single folder and ingest that folder:
@@ -90,7 +92,7 @@ We have walkthrough examples of using the `ingest.sh` script to ingest both sing
 ##### Examples
 
 ###### Ingesting Single Files
-The `federated-learning` repository provides sample MCODE data in the `mohccn-data` submodule to ingest onto a local Katsu instance. To ingest this data, we first create a project by running
+The `CanDIG/mohccn-data` repository provides sample MCODE data to ingest onto a local Katsu instance. To ingest this data, we first create a project by running
 ```bash
 bash ingestion_scripts/create_project.sh -t <DOCKER_TAG> mohccn-test
 ```
@@ -104,7 +106,7 @@ bash ingestion_scripts/create_table.sh -t <DOCKER_TAG> <DATASET_UUID> table-test
 ```
 This should return a uuid that you should save to use in the next command to ingest data. Notice that we specify our table type as mcodepacket since the `mohccn-data` repository supplies MCODE data. Finally, we ingest our data from our local filesystem by running our ingest script with the `-l` flag specified.
 ```bash
-bash ingestion_scripts/ingest.sh -t <DOCKER_TAG> -l <TABLE_UUID> mcode_json <PATH_TO_FEDERATED_LEARNING_REPOSITORY>/mohccn-data/mCode_ingest_scripts.json
+bash ingestion_scripts/ingest.sh -t <DOCKER_TAG> -l <TABLE_UUID> mcode_json <PATH_TO_MOHCCN_DATA_REPO>/mCode_ingest_scripts.json
 ```
 After ingesting, you should see a message resembling the following
 ```
@@ -132,7 +134,8 @@ This should successfully ingest our data.
 
 ### Analyzing Data
 
-We have examples in our `examples/` directory. Please see each example's directory for detailed reproduction instructions.
+We have examples in our `experiments/` directory. Please see each example's directory for detailed reproduction instructions. Older experiments may need tweaking of the configuration to work properly, if you want to run them live instead of reading through the old experimental results in the Jupyter notebook.
+
 ## Development
 
 To run more existing services alongside Katsu, add the services to the `docker-compose.yaml` file and add their default configuration variables to `.default.env`.

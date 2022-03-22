@@ -6,7 +6,7 @@ version: '3'
 services:
 
     fl-server:
-        build: fl-server
+        build: services/fl-server
         container_name: fl-server
         ports:
         - "{initial_port}:8080"
@@ -45,10 +45,10 @@ volumes:
         - katsu-db-data-{cur_num}:/var/lib/postgresql/data
 
     katsu-{cur_num}:
-        build: katsu
+        build: services/katsu
         container_name: katsu-{cur_num}
         volumes:
-        - ./services/katsu/katsu_entrypoint.sh:/app/katsu_entrypoint.sh
+        - ./services/katsu_entrypoint.sh:/app/katsu_entrypoint.sh
         - ../federated-learning/ingestion_scripts/internal:/app/chord_metadata_service/ingestion_scripts
         entrypoint: ["/app/katsu_entrypoint.sh"]
         ports:
@@ -63,7 +63,7 @@ volumes:
             POSTGRES_PASSWORD: "${{KATSU_POSTGRES_PASSWORD:-admin}}"
 
     gql-interface-{cur_num}:
-        build: gql-interface
+        build: services/gql-interface
         container_name: gql-interface-{cur_num}
         ports:
         - "{graphql_port}:7999"
@@ -72,7 +72,7 @@ volumes:
             KATSU_API: "http://katsu-{cur_num}:8000/api"
 
     fl-client-{cur_num}:
-        build: fl-client
+        build: services/fl-client
         container_name: fl-client-{cur_num}
         depends_on:
         - fl-server

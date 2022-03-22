@@ -8,7 +8,7 @@ services:
         ports:
         - "5000:8080"
         environment:
-            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/graphql"
+            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
     
     db-katsu:
         image: postgres:latest
@@ -57,7 +57,7 @@ services:
         - fl-server
         environment:
             FLOWER_SERVER_URL: "fl-server:8080"
-            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/graphql"
+            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
 
     fl-client-1:
         build: services/fl-client
@@ -66,7 +66,7 @@ services:
         - fl-server
         environment:
             FLOWER_SERVER_URL: "fl-server:8080"
-            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/graphql"
+            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
         
 volumes:
     

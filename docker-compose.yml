@@ -34,8 +34,7 @@ services:
         depends_on:
         - db-katsu
         environment:
-            POSTGRES_HOST: "
-            "
+            POSTGRES_HOST: "katsu-db-data"
             POSTGRES_PORT: 5432
             POSTGRES_DATABASE: "${KATSU_POSTGRES_DB:-metadata}"
             POSTGRES_USER: "${KATSU_POSTGRES_USER:-admin}"

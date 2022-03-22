@@ -11,7 +11,7 @@ services:
         ports:
         - "{initial_port}:8080"
         environment:
-            GRAPHQL_INTERFACE_URL: "http://gql-interface-0:7999/graphql"
+            GRAPHQL_INTERFACE_URL: "http://gql-interface-0:7999/"
     """
     initial_port += 1
     template_middle = """
@@ -78,7 +78,7 @@ volumes:
         - fl-server
         environment:
             FLOWER_SERVER_URL: "{flower_server_url}"
-            GRAPHQL_INTERFACE_URL: "http://gql-interface-{cur_num}:7999/graphql"
+            GRAPHQL_INTERFACE_URL: "http://gql-interface-{cur_num}:7999/"
         """
         template_volumes = f"""
     katsu-db-data-{cur_num}:

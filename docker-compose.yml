@@ -20,21 +20,25 @@ services:
         ports:
         - "5001:5432"
         volumes:
-        - katsu-db-data:/var/lib/postgresql/data
+        - db-katsu-data:/var/lib/postgresql/data
 
     katsu:
-        image: ghcr.io/candig/candig-katsu:latest
+        build:
+            context: services/katsu
+            args:
+                - venv_python=3.7
+                - alpine_version=3.13
         container_name: katsu
         volumes:
         - ./services/katsu_entrypoint.sh:/app/katsu_entrypoint.sh
-        - ../federated-learning/ingestion_scripts/internal:/app/chord_metadata_service/ingestion_scripts
+        - ../federated-learning/ingestion-scripts/internal:/app/chord_metadata_service/ingestion-scripts
         entrypoint: ["/app/katsu_entrypoint.sh"]
         ports:
         - "5002:8000"
         depends_on:
         - db-katsu
         environment:
-            POSTGRES_HOST: "katsu-db-data"
+            POSTGRES_HOST: "db-katsu"
             POSTGRES_PORT: 5432
             POSTGRES_DATABASE: "${KATSU_POSTGRES_DB:-metadata}"
             POSTGRES_USER: "${KATSU_POSTGRES_USER:-admin}"
@@ -49,15 +53,6 @@ services:
             CANDIG_SERVER: "http://candig-dev:4000"
             KATSU_API: "http://katsu:8000/api"
 
-    fl-client-0:
-        build: services/fl-client
-        container_name: fl-client-0
-        depends_on:
-        - fl-server
-        environment:
-            FLOWER_SERVER_URL: "fl-server:8080"
-            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
-
     fl-client-1:
         build: services/fl-client
         container_name: fl-client-1
@@ -66,8 +61,16 @@ services:
         environment:
             FLOWER_SERVER_URL: "fl-server:8080"
             GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
-        
+
+    fl-client-2:
+        build: services/fl-client
+        container_name: fl-client-2
+        depends_on:
+        - fl-server
+        environment:
+            FLOWER_SERVER_URL: "fl-server:8080"
+            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
+
 volumes:
+    db-katsu-data:
     
-    katsu-db-data:
-        

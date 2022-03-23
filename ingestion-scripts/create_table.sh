@@ -61,4 +61,4 @@ dset_uuid="$1"
 table_title="$2"
 table_type="$3"
 
-docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion_scripts/create_table.py $dset_uuid $table_title $table_type $SERVER_URL
+docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion-scripts/create_table.py $dset_uuid $table_title $table_type $SERVER_URL

@@ -56,4 +56,4 @@ fi
 # Read in the script arguments
 proj_title="$1"
 
-docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion_scripts/create_proj.py $proj_title $SERVER_URL
+docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion-scripts/create_proj.py $proj_title $SERVER_URL

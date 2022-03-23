@@ -1,2 +1,4 @@
 flwr
 scikit-learn
+pandas
+requests

@@ -95,9 +95,9 @@ then
 
   for file in $(docker exec -it $KATSU_TAG \ls $absolute_path) ; do # here we loop through all files in the directory path.
     datapath="$absolute_path/$file"
-    docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion_scripts/ingest_file.py $table_uuid $datapath $SERVER_URL $workflow_id
+    docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion-scripts/ingest_file.py $table_uuid $datapath $SERVER_URL $workflow_id
   done
 else
   echo "no directory flag specified."
-  docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion_scripts/ingest_file.py $table_uuid $absolute_path $SERVER_URL $workflow_id
+  docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion-scripts/ingest_file.py $table_uuid $absolute_path $SERVER_URL $workflow_id
 fi

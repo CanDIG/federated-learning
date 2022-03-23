@@ -57,4 +57,4 @@ fi
 proj_uuid="$1"
 dset_title="$2"
 
-docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion_scripts/create_dset.py $proj_uuid $dset_title $SERVER_URL
+docker exec -it $KATSU_TAG python /app/chord_metadata_service/ingestion-scripts/create_dset.py $proj_uuid $dset_title $SERVER_URL

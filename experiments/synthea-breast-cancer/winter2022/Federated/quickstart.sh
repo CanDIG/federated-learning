@@ -46,6 +46,10 @@ error ()
 # Script                                                                       #
 ################################################################################
 
+# TODO: Change Synthea Path to be an Option (-d) instead of Argument
+# TODO: Change Base Port to be an Option (-p) instead of Argument
+# TODO: Create Option (-r) to reset katsu DB before ingestion 
+
 # Read in the script options
 while getopts ":his" opt; do
   case $opt in

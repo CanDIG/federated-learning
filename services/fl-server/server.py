@@ -5,7 +5,6 @@ import numpy as np
 import utils
 from sklearn.metrics import log_loss
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score
 from typing import Dict, List, Optional, Tuple
 
 
@@ -27,10 +26,8 @@ def get_eval_fn(model: LogisticRegression):
         utils.set_model_params(model, parameters)
         loss = log_loss(y_test, model.predict_proba(X_test))
         accuracy = model.score(X_test, y_test)
-        auc_score = roc_auc_score(y_test, model.predict(X_test))
-        print(f"auc score: {auc_score}")
-
-        return loss, {"accuracy": accuracy, "auc score": auc_score}
+        print(f"Accuracy: {accuracy}")
+        return loss, {"accuracy": accuracy}
 
     return evaluate
 

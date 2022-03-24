@@ -1,208 +1,204 @@
 # Adapted from https://github.com/adap/flower/tree/main/examples/sklearn-logreg-mnist
 
-from typing import Tuple, Union, List
+# Imports - Helpers
+from helpers.parsers import PatientInfoParser, UniqueInfoParser
+from helpers.defaults import *
+
+# Imports - Processing
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from pandas.core.frame import DataFrame
 import numpy as np
 import pandas as pd
-from pandas.core.frame import DataFrame
-from pandas.core.series import Series
-from requests.models import Response
-from sklearn.linear_model import LogisticRegression
-from sklearn.decomposition import PCA
-from sklearn.model_selection import train_test_split
-import requests
-import json
-import os
-import datetime
 
+# Imports - Typing
+from typing import List, Dict, Any, Tuple, Union
+
+# Imports - Requests
+from requests.models import Response
+import requests
+import os
+
+
+# Constants
 RANDOM_STATE = 1729
 XY = Tuple[pd.DataFrame, np.ndarray]
+
+# Types
 Dataset = Tuple[XY, XY]
 LogRegParams = Union[XY, Tuple[np.ndarray]]
 XYList = List[XY]
 
+# Error Class
 class DataFetchError(Exception):
     """"
     Exception raised for failing to fetch data.
         Attributes:
         message -- A message detailing the failing status code of the request
     """
+
     def __init__(self, message: str):
         self.message = message
-
-def parse_diagnosis_age(row) -> float:
-    """
-    A function that returns the difference (in hours) between the diagnosis date and born date of a dataframe entry.
-    
-    Input: A (Katsu returned) JSON object of the MCODE data.
-    Output: The difference between the diagnosis date and born date.
-    """
-    diag_date = row['cancerCondition'][0]['dateOfDiagnosis']
-    diag_age = datetime.datetime(int(diag_date[0:4]), int(diag_date[5:7]), int(diag_date[8:10]))
-    born_date = row['subject.dateOfBirth']
-    born_age = datetime.datetime(int(born_date[0:4]), int(born_date[5:7]), int(born_date[8:10]))
-    difference = diag_age - born_age
-    diff_in_hrs = divmod(difference.total_seconds(), 3600)[0] # rounded down
-    return diff_in_hrs
 
 def load_data() -> Dataset:
     """Queries the GraphQL-interface for all MCODE data and preprocesses it.
     """
+
+    def get_request(query: str) -> Response:
+        """
+        Returns a Response object for a GraphQL query that is passed in
+
+        Arguments:
+            query: str containing GraphQL formatted query
+        
+        Returns:
+            Response
+        """
+        
+        graphql_url = os.getenv("GRAPHQL_INTERFACE_URL", None)
+
+        if graphql_url is None:
+            raise DataFetchError(f"No GraphQL interface URL specified")
+
+        request = requests.post(graphql_url, json={"query": query})
+        if request.status_code != 200:
+            raise DataFetchError(f"Could not query GraphQL interface. Error code: {request.status_code}")
+        
+        return request
+
+    def create_dataframe(patients: List[Dict[str, Any]]) -> DataFrame:
+        """
+        Creates a Pandas Dataframe object from a List of Dictionaries containing the collected mCODE data
+
+        Arguments:
+            patients: List[Dict[str, Any]] containing patient information
+        
+        Returns:
+            pd.Dataframe
+        """
+        
+        df = pd.DataFrame(patients)
+        df = df.dropna(subset=['numberOfMeds', 'nodes', 'primary', 'stage', 'sex', 'diagnosisAge', 'cancerStatus'])
+        df = df.loc[df['sex'] != 0]
+        df = df.loc[df['cancerType'] == 'Malignant neoplasm of breast (disorder)']
+        df = df.drop(columns=['cancerType', 'sex'])
+        return df.reset_index(drop=True)
+
     def preprocess_mcode_req(req: Response) -> DataFrame:
         """
         Cleans Katsu-ingested + GraphQL served MCODE data and prepares for other preprocessing functions.
-        See https://github.com/CanDIG/federated-learning/blob/main/examples/synthea-breast-cancer/Non-FederatedClassification.ipynb for
-        brief justification of these steps.
 
         Arguments:
-        req: req.Response (raw response from GraphQL interface with provided query)
+            req: Response (raw response from GraphQL interface with provided query)
 
         Returns:
-        pd.DataFrame
+            pd.DataFrame
         """
-        # turn request into pandas Dataframe, dropping unnecessary columns and rows:
-        all_results = json.loads(req.text)['data']['katsuDataModels']['mcodeDataModels']['mcodePackets']
-        df = pd.json_normalize(all_results)
-        for col in df:
-            if df[col].astype(str).nunique() == 1:
-                print(col)
-                print(df[col].astype(str).unique()) # we drop null-valued and unnecessary columns.
-                df = df.drop(col, axis=1)
-        df = df.dropna(subset=['cancerDiseaseStatus.label']) # drop any rows that have empty disease status labels.
 
-        # enumerate cancer_related_procedures into one-hot encoded columns
-        all_procs = set()
-        for _, row in df.iterrows():
-            for i in row['cancerRelatedProcedures']:
-                all_procs.add(i['code']['label'])
-        dict_list_procs = []
-        for _, row in df.iterrows():
-            row_dict = dict.fromkeys(all_procs, 0)
-            for i in row['cancerRelatedProcedures']:
-                row_dict[i['code']['label']] += 1
-            dict_list_procs.append(row_dict)
-        df_procs = pd.DataFrame(dict_list_procs)
+        # Get JSON response
+        patient_info_json = req.json().get('data').get('katsuDataModels').get('mcodeDataModels').get('mcodePackets')
 
-        # enumerate medication_statement into one-hot encoded columns
-        all_meds = set()
-        for _, row in df.iterrows():
-            for i in row['medicationStatement']:
-                all_meds.add(i['medicationCode']['label'])
-                
-        dict_list_meds = []
-        for _, row in df.iterrows():
-            row_dict = dict.fromkeys(all_meds, 0)
-            for i in row['medicationStatement']:
-                row_dict[i['medicationCode']['label']] += 1
-            dict_list_meds.append(row_dict)
-        df_meds = pd.DataFrame(dict_list_meds)
+        # Defines unique medications and procedure types
+        uniq_finder = UniqueInfoParser(patient_info_json)
+        uniq_meds = uniq_finder.get_uniq_meds()
+        uniq_procedures = uniq_finder.get_uniq_procedures()
 
-        # parse the age of diagnosis for each patient
-        diag_age = df.apply(lambda row: parse_diagnosis_age(row), axis=1)
-        diag_age_rename = diag_age.rename("diagnosisAge")
-        df = df.join(pd.DataFrame(diag_age_rename))
+        # Create list of patient info
+        patient_info_list = []
+        for patient in patient_info_json:
+            patient_info_dict = {}
+            patient_info = PatientInfoParser(
+                uniq_meds, uniq_procedures, patient).get_patient_data()
 
-        # drop cancer condition column (see Non-FederatedClassification.ipynb)
-        df = df.drop(axis=1, labels=['cancerCondition', 'medicationStatement', 'cancerRelatedProcedures'])
+            number_of_meds = sum(
+                [quantity for quantity in patient_info.meds.values()])
 
-        # concatenate all of the newly formatted columns together
-        dfnew = pd.concat([df.reset_index(), df_procs, df_meds], axis=1, ignore_index=False)
+            for procedure in uniq_procedures:
+                patient_info_dict[procedure] = patient_info.procedures[procedure]
 
-        # one-hot encode the cancer_disease_status_label column, our dependent variable in this context.
-        one_hot = pd.get_dummies(dfnew['cancerDiseaseStatus.label'])
-        dfnew = dfnew.drop('cancerDiseaseStatus.label', axis=1)
-        dfnew = dfnew.join(one_hot["Patient's condition improved"])
-
-        # drop extraneous columns
-        dfnew = dfnew.drop(['subject.dateOfBirth', 'index'], axis=1)
-
-        return dfnew
+            patient_info_dict['sex'] = patient_info.sex
+            patient_info_dict['nodes'] = patient_info.nodes
+            patient_info_dict['stage'] = patient_info.stage
+            patient_info_dict['numberOfMeds'] = number_of_meds
+            patient_info_dict['primary'] = patient_info.primary
+            patient_info_dict['diagnosisAge'] = patient_info.age
+            patient_info_dict['cancerType'] = patient_info.cancer_type
+            patient_info_dict['cancerStatus'] = patient_info.cancer_status
+            patient_info_list.append(patient_info_dict)
+        
+        return create_dataframe(patient_info_list)
     
-    def undersample_majority_class(df: DataFrame) -> Tuple[DataFrame, Series]:
+    def create_dataset_splits(df: DataFrame) -> Dataset:
         """
-        If this function is being used with the provided demo data ingested, then the positive class of
-        "Patient's condition improved" will be massively overrepresented. To counter the effects of this
-        on a logistic regression classifier, we massively undersample this majority class to be equal to 
-        that of the negative class.
+        Split data into training and testing sets from passed in DataFrame, in the form of a tuple of tuples, ((X,Y),(X,Y))
 
-        Arguments:
-        df: pd.DataFrame
-
-        Returns:
-        Tuple[pd.DataFrame, pd.Series]
+        Arguments: 
+            df: DataFrame containing full Dataset
+        
+        Response:
+            Dataset object
         """
-        positive_entries = df[df["Patient's condition improved"] == 1]
-        positive_sample = positive_entries.sample(n=61, random_state=1729)
+        
+        # Split into X and y
+        X = []
+        y = []
 
-        negative_entries = df[df["Patient's condition improved"] == 0]
-
-        ml_sample = positive_sample.append(negative_entries)
-        X = ml_sample.drop("Patient's condition improved", axis=1)
-        y = ml_sample["Patient's condition improved"]
-
-        return (X, y)
-
-    def pca_dimensionality_reduction(df: DataFrame) -> DataFrame:
-        """
-        If this function is being used with the provided demo data ingested, then there are 37 total
-        features in the cleaned and preprocessed data. With only 122 examples, we use principal
-        component analysis to drop this feature count to 10.
-
-        Arguments:
-        df: pd.DataFrame
-
-        Returns:
-        pd.DataFrame
-        """
-        pca = PCA(n_components=10, whiten=True)
-        return pca.fit_transform(df)
-
-    query = """
-        query{
-        katsuDataModels
-        {
-            mcodeDataModels
-            {
-            mcodePackets{
-                subject {
-                dateOfBirth
-                sex
-                }
-                cancerCondition {
-                dateOfDiagnosis
-                }
-                cancerRelatedProcedures {
-                code {
-                    label
-                }
-                }
-                cancerDiseaseStatus {
-                label
-                }
-                medicationStatement {
-                medicationCode {
-                    label
-                }
-                }
-            }
-            }
-        }
-        }
-    """
-    url = os.environ['GRAPHQL_INTERFACE_URL']
-    req = requests.post(url, json={'query': query})
-    if req.status_code != 200:
-        raise DataFetchError(f"Could not query GraphQL interface, error code {req.status_code}")
+        for _, row in df.iterrows():
+            X.append([row.surgical, row.radiation, row.cancerStatus, row.diagnosisAge, row.primary, row.nodes, row.numberOfMeds])
+            y.append(row.stage)
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state = RANDOM_STATE)
+        return scale_data(((X_train, y_train), (X_test, y_test)))
     
-    preproc_data = preprocess_mcode_req(req)
-    X, y = undersample_majority_class(preproc_data)
-    X = pca_dimensionality_reduction(X)
-    # we do not split into validation sets due to low-volume of data
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=RANDOM_STATE)
+    def scale_data(data: Dataset) -> Dataset:
+        """
+        Scale input data using sklearn StandardScaler to prepare for testing
 
-    return (x_train, y_train), (x_test, y_test)
+        Arguments:
+            data: Dataset object containing training and testing data
+        
+        Returns:
+            Dataset
+        """
+        
+        scaler = StandardScaler()
+
+        training_set = data[0]
+        testing_set = data[1]
+
+        X_train = training_set[0]
+        y_train = training_set[1]
+        X_test = testing_set[0]
+        y_test = testing_set[1]
+
+        scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
+        
+        return (X_train, y_train), (X_test, y_test)
+
+    # Request information from GraphQL
+    data_json = get_request(DEFAULT_QUERY)
+
+    # Apply preprocessing function
+    preproc_df = preprocess_mcode_req(data_json)
+
+    # Split into train/test
+    return create_dataset_splits(preproc_df)
+
 
 def get_model_parameters(model: LogisticRegression) -> LogRegParams:
-    """Returns the paramters of a sklearn LogisticRegression model."""
+    """
+    Returns the paramters of a sklearn LogisticRegression model.
+    
+    Arguments:
+        model: LogisticRegression model whose params are needed 
+    
+    Returns:
+        LogRegParams
+    """
+
     if model.fit_intercept:
         params = (model.coef_, model.intercept_)
     else:
@@ -210,10 +206,18 @@ def get_model_parameters(model: LogisticRegression) -> LogRegParams:
     return params
 
 
-def set_model_params(
-    model: LogisticRegression, params: LogRegParams
-) -> LogisticRegression:
-    """Sets the parameters of a sklean LogisticRegression model."""
+def set_model_params(model: LogisticRegression, params: LogRegParams) -> LogisticRegression:
+    """
+    Sets the parameters of a sklean LogisticRegression model.
+    
+    Arguments:
+        model: LogisticRegression model
+        params: LogRegParams to implement in the model
+    
+    Returns:
+        LogisticRegression
+    """
+
     model.coef_ = params[0]
     if model.fit_intercept:
         model.intercept_ = params[1]
@@ -227,24 +231,10 @@ def set_initial_params(model: LogisticRegression):
     to sklearn.linear_model.LogisticRegression documentation for more
     information.
     """
-    n_classes = 2  # We are training a binary classifier
-    n_features = 10  # Number of features in dataset
+    
+    n_classes = 4  # We are training a binary classifier
+    n_features = 7  # Number of features in dataset
     model.classes_ = np.array([i for i in range(n_classes)])
-
     model.coef_ = np.zeros((n_classes, n_features))
     if model.fit_intercept:
         model.intercept_ = np.zeros((n_classes,))
-
-
-def shuffle(X: np.ndarray, y: np.ndarray) -> XY:
-    """Shuffle X and y."""
-    rng = np.random.default_rng(RANDOM_STATE)
-    idx = rng.permutation(len(X))
-    return X[idx], y[idx]
-
-
-def partition(X: np.ndarray, y: np.ndarray, num_partitions: int) -> XYList:
-    """Split X and y into a number of partitions."""
-    return list(
-        zip(np.array_split(X, num_partitions), np.array_split(y, num_partitions))
-    )

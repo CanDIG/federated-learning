@@ -1,33 +1,36 @@
 # Adapted from https://github.com/adap/flower/tree/main/examples/sklearn-logreg-mnist
 
-from typing import List, Optional, Dict, Any, Tuple, Union
+# Imports - Helpers
+from helpers.parsers import PatientInfoParser, UniqueInfoParser
+from helpers.defaults import *
+
+# Imports - Processing
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from pandas.core.frame import DataFrame
 import numpy as np
 import pandas as pd
-from pandas.core.frame import DataFrame
-from pandas.core.series import Series
+
+# Imports - Typing
+from typing import List, Dict, Any, Tuple, Union
+
+# Imports - Requests
 from requests.models import Response
-from sklearn.linear_model import LogisticRegression
-from sklearn.decomposition import PCA
-from sklearn.model_selection import train_test_split
 import requests
-import json
 import os
-import datetime
-import re
-import requests
-from helpers.defaults import *
-from helpers.parsers import PatientInfoParser, UniqueInfoParser
 
 
-dataset_graphql_url = 'http://localhost:5003'
-
+# Constants
 RANDOM_STATE = 1729
 XY = Tuple[pd.DataFrame, np.ndarray]
+
+# Types
 Dataset = Tuple[XY, XY]
 LogRegParams = Union[XY, Tuple[np.ndarray]]
 XYList = List[XY]
 
-
+# Error Class
 class DataFetchError(Exception):
     """"
     Exception raised for failing to fetch data.
@@ -38,38 +41,64 @@ class DataFetchError(Exception):
     def __init__(self, message: str):
         self.message = message
 
-
-def parse_diagnosis_age(row) -> float:
-    """
-    A function that returns the difference (in hours) between the diagnosis date and born date of a dataframe entry.
-
-    Input: A (Katsu returned) JSON object of the MCODE data.
-    Output: The difference between the diagnosis date and born date.
-    """
-    diag_date = row['cancerCondition'][0]['dateOfDiagnosis']
-    diag_age = datetime.datetime(int(diag_date[0:4]), int(
-        diag_date[5:7]), int(diag_date[8:10]))
-    born_date = row['subject.dateOfBirth']
-    born_age = datetime.datetime(int(born_date[0:4]), int(
-        born_date[5:7]), int(born_date[8:10]))
-    difference = diag_age - born_age
-    diff_in_hrs = divmod(difference.total_seconds(), 3600)[0]  # rounded down
-    return diff_in_hrs
-
-
 def load_data() -> Dataset:
     """Queries the GraphQL-interface for all MCODE data and preprocesses it.
     """
+
+    def get_request(query: str) -> Response:
+        """
+        Returns a Response object for a GraphQL query that is passed in
+
+        Arguments:
+            query: str containing GraphQL formatted query
+        
+        Returns:
+            Response
+        """
+        
+        graphql_url = os.getenv("GRAPHQL_INTERFACE_URL", None)
+
+        if graphql_url is None:
+            raise DataFetchError(f"No GraphQL interface URL specified")
+
+        request = requests.post(graphql_url, json={"query": query})
+        if request.status_code != 200:
+            raise DataFetchError(f"Could not query GraphQL interface. Error code: {request.status_code}")
+        
+        return request
+
+    def create_dataframe(patients: List[Dict[str, Any]]) -> DataFrame:
+        """
+        Creates a Pandas Dataframe object from a List of Dictionaries containing the collected mCODE data
+
+        Arguments:
+            patients: List[Dict[str, Any]] containing patient information
+        
+        Returns:
+            pd.Dataframe
+        """
+        
+        df = pd.DataFrame(patients)
+        df = df.dropna(subset=['numberOfMeds', 'nodes', 'primary', 'stage', 'sex', 'diagnosisAge', 'cancerStatus'])
+        df = df.loc[df['sex'] != 0]
+        df = df.loc[df['cancerType'] == 'Malignant neoplasm of breast (disorder)']
+        df = df.drop(columns=['cancerType', 'sex'])
+        return df.reset_index(drop=True)
+
     def preprocess_mcode_req(req: Response) -> DataFrame:
         """
         Cleans Katsu-ingested + GraphQL served MCODE data and prepares for other preprocessing functions.
 
         Arguments:
-        req: req.Response (raw response from GraphQL interface with provided query)
+            req: Response (raw response from GraphQL interface with provided query)
 
         Returns:
-        pd.DataFrame
+            pd.DataFrame
         """
+
+        # Get JSON response
+        patient_info_json = req.json().get('data').get('katsuDataModels').get('mcodeDataModels').get('mcodePackets')
+
         # Defines unique medications and procedure types
         uniq_finder = UniqueInfoParser(patient_info_json)
         uniq_meds = uniq_finder.get_uniq_meds()
@@ -97,50 +126,79 @@ def load_data() -> Dataset:
             patient_info_dict['cancerType'] = patient_info.cancer_type
             patient_info_dict['cancerStatus'] = patient_info.cancer_status
             patient_info_list.append(patient_info_dict)
+        
+        return create_dataframe(patient_info_list)
+    
+    def create_dataset_splits(df: DataFrame) -> Dataset:
+        """
+        Split data into training and testing sets from passed in DataFrame, in the form of a tuple of tuples, ((X,Y),(X,Y))
 
-        # Clean up and create dataset
-        pd.set_option('display.max_columns', None)
-        df = pd.DataFrame(patient_info_list)
-        df = df.dropna(subset=['numberOfMeds', 'nodes', 'primary',
-                       'stage', 'sex', 'diagnosisAge', 'cancerStatus'])
-        df = df.loc[df['sex'] != 0]
-        df = df.loc[df['cancerType'] ==
-                    'Malignant neoplasm of breast (disorder)']
-        df = df.drop(columns=['cancerType', 'sex'])
-        df = df.reset_index(drop=True)
-        return df
+        Arguments: 
+            df: DataFrame containing full Dataset
+        
+        Response:
+            Dataset object
+        """
+        
+        # Split into X and y
+        X = []
+        y = []
+
+        for _, row in df.iterrows():
+            X.append([row.surgical, row.radiation, row.cancerStatus, row.diagnosisAge, row.primary, row.nodes, row.numberOfMeds])
+            y.append(row.stage)
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state = RANDOM_STATE)
+        return scale_data(((X_train, y_train), (X_test, y_test)))
+    
+    def scale_data(data: Dataset) -> Dataset:
+        """
+        Scale input data using sklearn StandardScaler to prepare for testing
+
+        Arguments:
+            data: Dataset object containing training and testing data
+        
+        Returns:
+            Dataset
+        """
+        
+        scaler = StandardScaler()
+
+        training_set = data[0]
+        testing_set = data[1]
+
+        X_train = training_set[0]
+        y_train = training_set[1]
+        X_test = testing_set[0]
+        y_test = testing_set[1]
+
+        scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
+        
+        return (X_train, y_train), (X_test, y_test)
 
     # Request information from GraphQL
-    data_json = requests.post(dataset_graphql_url, json={
-                              'query': DEFAULT_QUERY})
-    if data_json.status_code != 200:
-        raise DataFetchError(
-            f"Could not query GraphQL interface, error code {data_json.status_code}")
-
-    patient_info_json = data_json.json().get('data').get(
-        'katsuDataModels').get('mcodeDataModels').get('mcodePackets')
+    data_json = get_request(DEFAULT_QUERY)
 
     # Apply preprocessing function
     preproc_df = preprocess_mcode_req(data_json)
 
-    # Split into X and y
-    X = []
-    y = []
-
-    for index, row in preproc_df.iterrows():
-        X.append([row.surgical, row.radiation, row.cancerStatus,
-                 row.diagnosisAge, row.primary, row.nodes, row.numberOfMeds])
-        y.append(row.stage)
-
     # Split into train/test
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=1729)
-
-    return (X_train, y_train), (X_test, y_test)
+    return create_dataset_splits(preproc_df)
 
 
 def get_model_parameters(model: LogisticRegression) -> LogRegParams:
-    """Returns the paramters of a sklearn LogisticRegression model."""
+    """
+    Returns the paramters of a sklearn LogisticRegression model.
+    
+    Arguments:
+        model: LogisticRegression model whose params are needed 
+    
+    Returns:
+        LogRegParams
+    """
+
     if model.fit_intercept:
         params = (model.coef_, model.intercept_)
     else:
@@ -149,7 +207,17 @@ def get_model_parameters(model: LogisticRegression) -> LogRegParams:
 
 
 def set_model_params(model: LogisticRegression, params: LogRegParams) -> LogisticRegression:
-    """Sets the parameters of a sklean LogisticRegression model."""
+    """
+    Sets the parameters of a sklean LogisticRegression model.
+    
+    Arguments:
+        model: LogisticRegression model
+        params: LogRegParams to implement in the model
+    
+    Returns:
+        LogisticRegression
+    """
+
     model.coef_ = params[0]
     if model.fit_intercept:
         model.intercept_ = params[1]
@@ -163,24 +231,10 @@ def set_initial_params(model: LogisticRegression):
     to sklearn.linear_model.LogisticRegression documentation for more
     information.
     """
-    n_classes = 2  # We are training a binary classifier
-    n_features = 10  # Number of features in dataset
+    
+    n_classes = 4  # We are training a binary classifier
+    n_features = 7  # Number of features in dataset
     model.classes_ = np.array([i for i in range(n_classes)])
     model.coef_ = np.zeros((n_classes, n_features))
     if model.fit_intercept:
         model.intercept_ = np.zeros((n_classes,))
-
-
-def shuffle(X: np.ndarray, y: np.ndarray) -> XY:
-    """Shuffle X and y."""
-    rng = np.random.default_rng(RANDOM_STATE)
-    idx = rng.permutation(len(X))
-    return X[idx], y[idx]
-
-
-def partition(X: np.ndarray, y: np.ndarray, num_partitions: int) -> XYList:
-    """Split X and y into a number of partitions."""
-    return list(
-        zip(np.array_split(X, num_partitions),
-            np.array_split(y, num_partitions))
-    )

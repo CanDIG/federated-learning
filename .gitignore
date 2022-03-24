@@ -9,3 +9,6 @@
 
 # Ignore OSX Desktop Services Store file
 .DS_Store
+
+# Ignore Table UUID Files
+**/fl-*/tables.txt

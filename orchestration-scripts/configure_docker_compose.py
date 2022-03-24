@@ -11,7 +11,7 @@ def print_ports(initial_port: int) -> None:
     print(f"Your Flower Server port is {initial_port}")
     print(f"Your Katsu DB port is {initial_port + 1}")
     print(f"Your Katsu port is {initial_port + 2}")
-    print(f"Your GraphQL port is {initial_port + 3}")
+    print(f"Your GraphQL port is {initial_port + 3}\n")
 
 def get_template_top(initial_port: int) -> str:
     """
@@ -74,8 +74,8 @@ services:
         ports:
         - "{graphql_port}:7999"
         environment:
-            CANDIG_SERVER: "http://candig-dev:4000"
-            KATSU_API: "http://katsu:8000/api"
+            GRAPHQL_CANDIG_SERVER: "http://candig-dev:4000"
+            GRAPHQL_KATSU_API: "http://katsu:8000/api"
 """
 
 def get_template_bottom() -> str:
@@ -102,6 +102,7 @@ def get_current_client(cur_num: int) -> str:
         environment:
             FLOWER_SERVER_URL: "fl-server:8080"
             GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
+            FLOWER_CLIENT_NUMBER: "{cur_num}"
 """
 
 def create_docker_compose_string(initial_port: int, scale: int) -> str:

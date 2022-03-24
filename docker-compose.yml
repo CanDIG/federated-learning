@@ -50,8 +50,8 @@ services:
         ports:
         - "5003:7999"
         environment:
-            CANDIG_SERVER: "http://candig-dev:4000"
-            KATSU_API: "http://katsu:8000/api"
+            GRAPHQL_CANDIG_SERVER: "http://candig-dev:4000"
+            GRAPHQL_KATSU_API: "http://katsu:8000/api"
 
     fl-client-1:
         build: services/fl-client
@@ -61,6 +61,7 @@ services:
         environment:
             FLOWER_SERVER_URL: "fl-server:8080"
             GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
+            FLOWER_CLIENT_NUMBER: "1"
 
     fl-client-2:
         build: services/fl-client
@@ -70,6 +71,7 @@ services:
         environment:
             FLOWER_SERVER_URL: "fl-server:8080"
             GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
+            FLOWER_CLIENT_NUMBER: "2"
 
 volumes:
     db-katsu-data:

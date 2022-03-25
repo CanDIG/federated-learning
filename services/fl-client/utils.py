@@ -232,8 +232,8 @@ def set_initial_params(model: LogisticRegression):
     information.
     """
     
-    n_classes = 4  # We are training a binary classifier
-    n_features = 7  # Number of features in dataset
+    n_classes = 4  
+    n_features = 7  
     model.classes_ = np.array([i for i in range(n_classes)])
     model.coef_ = np.zeros((n_classes, n_features))
     if model.fit_intercept:

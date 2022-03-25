@@ -46,7 +46,7 @@ error ()
 # Script                                                                       #
 ################################################################################
 
-# TODO: Change Synthea Path to be an Option (-d) instead of Argument
+# TODO: Change Synthea Path to be an Option Argument (-i SYNTHEA_PATH) instead of Argument
 # TODO: Change Base Port to be an Option (-p) instead of Argument
 # TODO: Create Option (-r) to reset katsu DB before ingestion 
 
@@ -67,7 +67,7 @@ while getopts ":his" opt; do
 done
 shift "$((OPTIND - 1))"
 
-if [ $# -lt 2 ]; 
+if [[ $# -lt 2 ]]; 
    then 
    printf "Not enough arguments - entered %d argument(s). Call the script with the -h flag for details.\n" $# 
    exit 0 
@@ -78,15 +78,15 @@ SYNTHEA_PATH=$1
 NUM_SITES=$2
 BASE_PORT=$3
 
-if [ -z to_ingest ]; then
+if [[ -z to_ingest ]]; then
     to_ingest=0
 fi
 
-if [ -z same_data ]; then
+if [[ -z same_data ]]; then
     same_data=0
 fi
 
-if [ -z ${BASE_PORT} ]; then
+if [[ -z ${BASE_PORT} ]]; then
     BASE_PORT=5000
 fi
 
@@ -94,7 +94,7 @@ fi
 ls ${SYNTHEA_PATH} 2>/dev/null 1>/dev/null  
 SYNTHEA_PATH_CODE=$?
 
-if [ ${SYNTHEA_PATH_CODE} -ne 0 ]; then
+if [[ ${SYNTHEA_PATH_CODE} -ne 0 ]]; then
     error "There was an error in finding the SYNTHEA_PATH: Error Code ${SYNTHEA_PATH_CODE}"
 fi
 
@@ -136,7 +136,7 @@ client_path="${PWD}/services/fl-client/"
 server_path="${PWD}/services/fl-server/"
 
 # Ingest Data, if necessary
-if [ ${to_ingest} -eq 1 ]; then
+if [[ ${to_ingest} -eq 1 ]]; then
     # Check to see if Table Files Exist
     if [[ -e "${client_path}tables.txt" ]]; then
         rm "${client_path}tables.txt"
@@ -154,7 +154,7 @@ if [ ${to_ingest} -eq 1 ]; then
         SITE_DIRS=()
         folder_len=$(($(ls -l ${SYNTHEA_PATH} | wc -l) - 1))
 
-        if [ ${folder_len} -ge ${NUM_SITES} ]; then
+        if [[ ${folder_len} -ge ${NUM_SITES} ]]; then
             split_size=$((${folder_len} / ${NUM_SITES}))
 
             for ((i=1 ; i <= ${NUM_SITES} ; i++)); do
@@ -186,12 +186,12 @@ if [ ${to_ingest} -eq 1 ]; then
             counter=$((${counter} + 1))
         done
     fi
+
+    echo
+    echo "Sleeping for $SLEEP_TIME seconds to let Docker containers complete the ingestion process."
+
+    sleep ${SLEEP_TIME}
 fi
-
-echo
-echo "Sleeping for $SLEEP_TIME seconds to let Docker containers complete the ingestion process."
-
-sleep ${SLEEP_TIME}
 
 echo
 docker-compose up -d

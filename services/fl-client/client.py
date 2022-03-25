@@ -1,7 +1,7 @@
 # Adapted from https://github.com/adap/flower/tree/main/examples/sklearn-logreg-mnist
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import log_loss
+from sklearn.metrics import log_loss, balanced_accuracy_score, f1_score, matthews_corrcoef
 import flwr as fl
 import warnings
 import utils
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     model = LogisticRegression(
         solver='lbfgs',
         random_state=utils.RANDOM_STATE,
-        max_iter=100,  # local epoch
+        max_iter=5000,  # local epoch
         warm_start=True,  # prevent refreshing weights when fitting
     )
 
@@ -43,7 +43,9 @@ if __name__ == "__main__":
             utils.set_model_params(model, parameters)
             loss = log_loss(y_test, model.predict_proba(X_test))
             accuracy = model.score(X_test, y_test)
-            return loss, len(X_test), {"accuracy": accuracy}
+            y_pred = model.predict(X_test)
+
+            return loss, len(X_test), {"accuracy": accuracy, "balanced_accuracy": balanced_accuracy_score(y_test, y_pred), "f1_score": f1_score(y_test, y_pred, average='macro'), "mcc": matthews_corrcoef(y_test, y_pred)}
 
     # Start Flower client
     fl.client.start_numpy_client(SERVER_URL, client=SyntheaClient())

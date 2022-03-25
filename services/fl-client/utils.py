@@ -151,6 +151,36 @@ def load_data() -> Dataset:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state = RANDOM_STATE)
         return scale_data(((X_train, y_train), (X_test, y_test)))
     
+    def undersample_majority_class(df: DataFrame) -> DataFrame:
+        """
+        If this function is being used with the provided demo data ingested, then will be an overrepresentation of stage 2 and 3. 
+        To counter the effects of this
+        on a logistic regression classifier, we massively undersample this majority classes to be equal to that of the minority class.
+
+        Arguments:
+        df: pd.DataFrame
+
+        Returns:
+        Tuple[pd.DataFrame, pd.Series]
+        """
+        stage_1 = df[df["stage"] == 1]
+        stage_2 = df[df["stage"] == 2]
+        stage_3 = df[df["stage"] == 3]
+        stage_4 = df[df["stage"] == 4]
+
+        sample_size = min([len(stage_1), len(stage_2), len(stage_3), len(stage_4)])
+
+        stage_1_new = stage_1.sample(n=sample_size, random_state=RANDOM_STATE)
+        stage_2_new = stage_2.sample(n=sample_size, random_state=RANDOM_STATE)
+        stage_3_new = stage_3.sample(n=sample_size, random_state=RANDOM_STATE)
+        stage_4_new = stage_4.sample(n=sample_size, random_state=RANDOM_STATE)
+
+        ml_sample = stage_2_new.append(stage_1_new)
+        ml_sample = stage_3_new.append(ml_sample)
+        ml_sample = stage_4_new.append(ml_sample)
+
+        return ml_sample
+    
     def scale_data(data: Dataset) -> Dataset:
         """
         Scale input data using sklearn StandardScaler to prepare for testing
@@ -185,7 +215,7 @@ def load_data() -> Dataset:
     preproc_df = preprocess_mcode_req(data_json)
 
     # Split into train/test
-    return create_dataset_splits(preproc_df)
+    return create_dataset_splits(undersample_majority_class(preproc_df))
 
 
 def get_model_parameters(model: LogisticRegression) -> LogRegParams:

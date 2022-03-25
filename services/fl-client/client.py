@@ -16,7 +16,7 @@ if __name__ == "__main__":
     model = LogisticRegression(
         solver='lbfgs',
         random_state=utils.RANDOM_STATE,
-        max_iter=5000,  # local epoch
+        max_iter=10000,  # local epoch
         warm_start=True,  # prevent refreshing weights when fitting
     )
 

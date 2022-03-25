@@ -17,6 +17,8 @@ trap "exit 1" TERM
 ################################################################################
 # Help                                                                         #
 ################################################################################
+
+# Output Help menu to the screen
 help ()
 {
    # Display Help
@@ -38,6 +40,8 @@ help ()
 ################################################################################
 # Errors                                                                       #
 ################################################################################
+
+# Output Error Message and exit
 error () 
 {
     echo "$1" 1>&2
@@ -47,6 +51,8 @@ error ()
 ################################################################################
 # Helper Functions                                                             #
 ################################################################################
+
+# Check to see if the ingestion path is valid
 check_path()
 {
     SYNTHEA_PATH=${1}
@@ -69,6 +75,7 @@ check_path()
     echo ${SYNTHEA_PATH}
 }
 
+# Check to see if the passed in port is valid
 check_port()
 {
     BASE_PORT=${1}
@@ -82,6 +89,7 @@ check_port()
     echo ${BASE_PORT}
 }
 
+# Check to see if the number of sites is valid
 check_sites()
 {
     NUM_SITES=${1}
@@ -95,6 +103,7 @@ check_sites()
     echo ${NUM_SITES}
 }
 
+# Check to see if value is empty, and if so, replace it with a passed in default
 check_value()
 {
     value=${1}
@@ -115,7 +124,7 @@ check_value()
 while getopts ":i:p:n:sh" opt; do
   case $opt in
     i)  SYNTHEA_PATH=$(check_path ${OPTARG})
-        to_ingest=1
+        TO_INGEST=1
         ;;
     p)  BASE_PORT=$(check_port ${OPTARG})
         ;;
@@ -138,6 +147,7 @@ SYNTHEA_PATH=$(check_value ${SYNTHEA_PATH} "NOT INGESTING DATA")
 SAME_DATA=$(check_value ${SAME_DATA} 0)
 BASE_PORT=$(check_value ${BASE_PORT} 5000)
 NUM_SITES=$(check_value ${NUM_SITES} 2)
+TO_INGEST=$(check_value ${TO_INGEST} 0)
 
 # Display Arguments
 echo "The following arguments have been provided:"
@@ -157,14 +167,18 @@ echo "Sleeping for $SLEEP_TIME seconds to let Docker containers complete initial
 
 sleep ${SLEEP_TIME}
 
-client_path="${PWD}/services/fl-client/"
-server_path="${PWD}/services/fl-server/"
+CLIENT_PATH="${PWD}/services/fl-client/"
+SERVER_PATH="${PWD}/services/fl-server/"
 
 # Ingest Data, if necessary
-if [[ ${to_ingest} -eq 1 ]]; then
+if [[ ${TO_INGEST} -eq 1 ]]; then
     # Check to see if Table Files Exist
-    if [[ -e "${client_path}tables.txt" ]]; then
-        rm "${client_path}tables.txt"
+    if [[ -e "${CLIENT_PATH}tables.txt" ]]; then
+        rm "${CLIENT_PATH}tables.txt"
+    fi
+
+    if [[ -e "${SERVER_PATH}tables.txt" ]]; then
+        rm "${SERVER_PATH}tables.txt"
     fi
 
     # Ingest Data into one Table
@@ -172,51 +186,52 @@ if [[ ${to_ingest} -eq 1 ]]; then
         echo
         ingestion=$(bash $PWD/ingestion-scripts/init.sh -l -d ${SYNTHEA_PATH} ${PROJECT_NAME} ${DATASET_NAME} ${TABLE_NAME} mcodepacket | tee /dev/tty)
 
-        echo "$ingestion" | grep "TABLE_UUID" >> "${client_path}tables.txt"
-        echo "$ingestion" | grep "TABLE_UUID" >> "${server_path}tables.txt"
+        echo "$ingestion" | grep "TABLE_UUID" >> "${CLIENT_PATH}tables.txt"
+        echo "$ingestion" | grep "TABLE_UUID" >> "${SERVER_PATH}tables.txt"
     else
         # Ingest Data into multiple Tables
         SITE_DIRS=()
-        folder_len=$(($(ls -l ${SYNTHEA_PATH} | wc -l) - 1))
+        DATA_LEN=$(($(ls -l ${SYNTHEA_PATH} | wc -l) - 1))
 
-        if [[ ${folder_len} -ge ${NUM_SITES} ]]; then
-            split_size=$((${folder_len} / ${NUM_SITES}))
-
+        # Copy Data into temporary folders
+        if [[ ${DATA_LEN} -ge ${NUM_SITES} ]]; then
             for ((i=1 ; i <= ${NUM_SITES} ; i++)); do
                 SITE_DIRS+=($(mktemp -d))
             done
 
-            counter=0
+            COUNTER=0
             for i in ${SYNTHEA_PATH}*; do
-                cp "${i}" "${SITE_DIRS[counter]}"
-                counter=$((${counter} + 1))
+                cp "${i}" "${SITE_DIRS[COUNTER]}"
+                COUNTER=$((${COUNTER} + 1))
 
-                if [[ counter -ge NUM_SITES ]]; then
-                    counter=0
+                if [[ COUNTER -ge NUM_SITES ]]; then
+                    COUNTER=0
                 fi
             done
         fi
 
-        counter=1
+        # Ingest Data and delete temporary folders
+        COUNTER=1
         for i in "${SITE_DIRS[@]}"; do
             echo "Folder Name: ${i}"
 
-            ingestion=$(bash $PWD/ingestion-scripts/init.sh -l -d "${i}" "${PROJECT_NAME}-${counter}" "${DATASET_NAME}-${counter}" "${TABLE_NAME}-${counter}" mcodepacket | tee /dev/tty)
+            ingestion=$(bash $PWD/ingestion-scripts/init.sh -l -d "${i}" "${PROJECT_NAME}-${COUNTER}" "${DATASET_NAME}-${COUNTER}" "${TABLE_NAME}-${COUNTER}" mcodepacket | tee /dev/tty)
 
-            echo "$ingestion" | grep "TABLE_UUID" >> "${client_path}tables.txt"
-            echo "$ingestion" | grep "TABLE_UUID" >> "${server_path}tables.txt"
+            echo "$ingestion" | grep "TABLE_UUID" >> "${CLIENT_PATH}tables.txt"
+            echo "$ingestion" | grep "TABLE_UUID" >> "${SERVER_PATH}tables.txt"
 
             rm -rf "${i}"
 
-            counter=$((${counter} + 1))
+            COUNTER=$((${COUNTER} + 1))
         done
     fi
 
     echo
-    echo "Sleeping for $SLEEP_TIME seconds to let Docker containers complete the ingestion process."
+    echo "Sleeping for ${SLEEP_TIME} seconds to let Docker containers complete the ingestion process."
 
     sleep ${SLEEP_TIME}
 fi
 
+# Start all services
 echo
 docker-compose up -d

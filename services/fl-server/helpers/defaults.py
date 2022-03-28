@@ -13,7 +13,7 @@ query{
   {
     mcodeDataModels
     {
-      mcodePackets{
+      mcodePackets(input: {table: "TABLE_UUID"}){
         subject {
           dateOfBirth
           sex

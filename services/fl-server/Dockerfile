@@ -12,6 +12,6 @@ USER root
 
 RUN pip install -r requirements.txt
 
-ADD init.sh /
+ADD entrypoint.sh /
 
-CMD ["/init.sh"]
+CMD ["/entrypoint.sh"]

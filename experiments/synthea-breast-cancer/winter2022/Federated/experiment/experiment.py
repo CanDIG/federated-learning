@@ -5,8 +5,7 @@ from bases.base_experiment import Experiment
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-from experiment.helpers.defaults import *
-from experiment.helpers.parsers import *
+from experiment.helpers import defaults, parsers
 from pandas.core.frame import DataFrame
 from requests.models import Response
 import pandas as pd
@@ -92,7 +91,7 @@ class FederatedLogReg(Experiment):
             'katsuDataModels').get('mcodeDataModels').get('mcodePackets')
 
         # Defines unique medications and procedure types
-        uniq_finder = UniqueInfoParser(patient_info_json)
+        uniq_finder = parsers.UniqueInfoParser(patient_info_json)
         uniq_meds = uniq_finder.get_uniq_meds()
         uniq_procedures = uniq_finder.get_uniq_procedures()
 
@@ -100,7 +99,7 @@ class FederatedLogReg(Experiment):
         patient_info_list = []
         for patient in patient_info_json:
             patient_info_dict = {}
-            patient_info = PatientInfoParser(
+            patient_info = parsers.PatientInfoParser(
                 uniq_meds, uniq_procedures, patient).get_patient_data()
 
             number_of_meds = sum(
@@ -210,9 +209,9 @@ class FederatedLogReg(Experiment):
         """
 
         if self.table_id:
-            return re.sub(r'TABLE_UUID', self.table_id, DEFAULT_QUERY)
+            return re.sub(r'TABLE_UUID', self.table_id, defaults.DEFAULT_QUERY)
         
-        return re.sub(r'mcodePackets\(.*\)', "mcodePackets", DEFAULT_QUERY)
+        return re.sub(r'mcodePackets\(.*\)', "mcodePackets", defaults.DEFAULT_QUERY)
     
     def load_data(self) -> Dataset:
         """

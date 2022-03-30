@@ -36,3 +36,8 @@ for this particular experimental setup. You should see the accuracy and AUC scor
 This particular demo showcases how federated learning *can* be run on the CanDIG microservices architecture, but a stronger experimental setup is required to truly investigate feasibility and
 true gains/losses due to learning from oncological data in this decentralized manner.
 
+## Technical Debt
+
+Upon implementation with Flower, the accuracy of the Logistic Regression model decreased. This is unexpected as the dataset/pre-processing/classification are the same. Some optimisation was done to improve the accuracy of the classifier, such as changing solvers, having an equal number data for each stage and increasing the number of iterations. While this did help, it still did not reach the accuracy of the non-federated classifier.
+
+This might be due to Flower, overfitting in the original classifer etc.

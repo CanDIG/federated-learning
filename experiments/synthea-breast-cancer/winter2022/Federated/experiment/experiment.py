@@ -62,15 +62,17 @@ class FederatedLogReg(Experiment):
 
         Arguments:
             patients: List[Dict[str, Any]] containing patient information
-        
+
         Returns:
             pd.Dataframe
         """
-        
+
         df = pd.DataFrame(patients)
-        df = df.dropna(subset=['numberOfMeds', 'nodes', 'primary', 'stage', 'sex', 'diagnosisAge', 'cancerStatus'])
+        df = df.dropna(subset=['numberOfMeds', 'nodes', 'primary',
+                       'stage', 'sex', 'diagnosisAge', 'cancerStatus'])
         df = df.loc[df['sex'] != 0]
-        df = df.loc[df['cancerType'] == 'Malignant neoplasm of breast (disorder)']
+        df = df.loc[df['cancerType'] ==
+                    'Malignant neoplasm of breast (disorder)']
         df = df.drop(columns=['cancerType', 'sex'])
         return df.reset_index(drop=True)
     
@@ -86,7 +88,8 @@ class FederatedLogReg(Experiment):
         """
 
         # Get JSON response
-        patient_info_json = req.json().get('data').get('katsuDataModels').get('mcodeDataModels').get('mcodePackets')
+        patient_info_json = req.json().get('data').get(
+            'katsuDataModels').get('mcodeDataModels').get('mcodePackets')
 
         # Defines unique medications and procedure types
         uniq_finder = UniqueInfoParser(patient_info_json)
@@ -124,17 +127,18 @@ class FederatedLogReg(Experiment):
 
         Arguments: 
             df: DataFrame containing full Dataset
-        
+
         Response:
             Dataset object
         """
-        
+
         # Split into X and y
         X = []
         y = []
 
         for _, row in df.iterrows():
-            X.append([row.surgical, row.radiation, row.cancerStatus, row.diagnosisAge, row.primary, row.nodes, row.numberOfMeds])
+            X.append([row.surgical, row.radiation, row.cancerStatus,
+                     row.diagnosisAge, row.primary, row.nodes, row.numberOfMeds])
             y.append(row.stage)
         
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state = self.RANDOM_STATE)
@@ -157,16 +161,16 @@ class FederatedLogReg(Experiment):
         stage_3 = df[df["stage"] == 3]
         stage_4 = df[df["stage"] == 4]
 
-        sample_size = min([len(stage_1), len(stage_2), len(stage_3), len(stage_4)])
+        sample_size = min([len(stage_1), len(stage_2),
+                          len(stage_3), len(stage_4)])
 
         stage_1_new = stage_1.sample(n=sample_size, random_state=self.RANDOM_STATE)
         stage_2_new = stage_2.sample(n=sample_size, random_state=self.RANDOM_STATE)
         stage_3_new = stage_3.sample(n=sample_size, random_state=self.RANDOM_STATE)
         stage_4_new = stage_4.sample(n=sample_size, random_state=self.RANDOM_STATE)
 
-        ml_sample = stage_2_new.append(stage_1_new)
-        ml_sample = stage_3_new.append(ml_sample)
-        ml_sample = stage_4_new.append(ml_sample)
+        ml_sample = pd.concat(
+            [stage_4_new, stage_3_new, stage_2_new, stage_1_new])
 
         return ml_sample
     
@@ -176,11 +180,11 @@ class FederatedLogReg(Experiment):
 
         Arguments:
             data: Dataset object containing training and testing data
-        
+
         Returns:
             Dataset
         """
-        
+
         scaler = StandardScaler()
 
         training_set = data[0]
@@ -194,7 +198,7 @@ class FederatedLogReg(Experiment):
         scaler.fit(X_train)
         X_train = scaler.transform(X_train)
         X_test = scaler.transform(X_test)
-        
+
         return (X_train, y_train), (X_test, y_test)
     
     def create_query(self) -> str:

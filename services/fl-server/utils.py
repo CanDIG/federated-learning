@@ -11,9 +11,10 @@ from sklearn.preprocessing import StandardScaler
 from pandas.core.frame import DataFrame
 import numpy as np
 import pandas as pd
+import re
 
 # Imports - Typing
-from typing import List, Dict, Any, Tuple, Union
+from typing import List, Dict, Any, Optional, Tuple, Union
 
 # Imports - Requests
 from requests.models import Response
@@ -47,6 +48,42 @@ class DataFetchError(Exception):
 def load_data() -> Dataset:
     """Queries the GraphQL-interface for all MCODE data and preprocesses it.
     """
+
+    def find_table_id(client_number: Optional[str], filename: str) -> Optional[str]:
+        """
+        Returns an optional string denoting the katsu db table_id for an optional client number, stored on a file called filename
+
+        Arguments:
+            client_number: Optional str containing the current client number
+            filename: str containing location of file with table ids
+        
+        Returns:
+            Optional[str]
+        """
+
+        with open(filename, "r") as f:
+            tables = [table.strip("TABLE_UUID:").strip() for table in f.readlines()]
+        
+        if client_number is not None:
+            return tables[int(client_number) - 1]
+        
+        return None
+
+    def create_query(table_id: Optional[str]) -> str:
+        """
+        Returns a str containing the GraphQL query for the specified table_id
+
+        Arguments:
+            table_id: Optional str containing given table_id
+        
+        Returns:
+            str
+        """
+
+        if table_id:
+            return re.sub(r'TABLE_UUID', table_id, defaults.DEFAULT_)
+        
+        return re.sub(r'mcodePackets\(.*\)', "mcodePackets", defaults.DEFAULT_)
 
     def get_request(query: str) -> Response:
         """
@@ -217,8 +254,14 @@ def load_data() -> Dataset:
 
         return (X_train, y_train), (X_test, y_test)
 
+    # Get Client Number
+    client_num = os.getenv("FLOWER_CLIENT_NUMBER")
+    
+    # Get Query String
+    query = create_query(find_table_id(client_num, "tables.txt"))
+
     # Request information from GraphQL
-    data_json = get_request(defaults.DEFAULT_QUERY)
+    data_json = get_request(query)
 
     # Apply preprocessing function
     preproc_df = preprocess_mcode_req(data_json)

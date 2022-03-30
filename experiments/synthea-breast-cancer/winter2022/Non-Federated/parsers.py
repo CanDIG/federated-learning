@@ -1,7 +1,7 @@
 '''parsers.py: A module with helper functions/classes to support the EDA parsing process in SyntheaEDA.ipynb'''
 
 import re
-from defaults import *
+import defaults
 from datetime import datetime
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
@@ -27,7 +27,7 @@ class UniqueInfoParser:
     def get_uniq_procedures(self) -> List[str]:
         procedures = []
         for patient in self.patient_info_json:
-            procs = [procedure.get('procedureType') for procedure in patient.get('cancerRelatedProcedures', DEFAULT_PROCEDURES)]
+            procs = [procedure.get('procedureType') for procedure in patient.get('cancerRelatedProcedures', defaults.DEFAULT_PROCEDURES)]
             procedures.extend(procs)
             
         return list(set(procedures))
@@ -36,7 +36,7 @@ class UniqueInfoParser:
     def get_uniq_meds(self) -> List[str]:
         meds = []
         for patient in self.patient_info_json:
-            patient_meds = [med.get('medicationCode').get('label') for med in patient.get('medicationStatement', DEFAULT_MEDS)]
+            patient_meds = [med.get('medicationCode').get('label') for med in patient.get('medicationStatement', defaults.DEFAULT_MEDS)]
             meds.extend(patient_meds)
             
         return list(set(meds))
@@ -67,7 +67,7 @@ class PatientInfoParser:
 
     ''' __encode_one_hot_sex(): Returns an Optional integer with 1 for a female sex specified and 0 otherwise'''
     def __encode_one_hot_sex(self) -> Optional[int]: 
-        sex = self.patient.get('subject', DEFAULT_SUBJECT).get('sex')
+        sex = self.patient.get('subject', defaults.DEFAULT_SUBJECT).get('sex')
 
         if sex is not None: 
             if sex == 'FEMALE': return 1
@@ -78,8 +78,8 @@ class PatientInfoParser:
     '''__encode_one_hot_age(): Returns an optional integer specifying the number of days between the date of diagnosis
             and the date of birth of the patient'''
     def __encode_one_hot_age(self)-> Optional[int]:
-        age = self.patient.get('subject', DEFAULT_SUBJECT).get('dateOfBirth')
-        diag = self.patient.get('cancerCondition', DEFAULT_CANCER_CONDITION)[0].get('dateOfDiagnosis')
+        age = self.patient.get('subject', defaults.DEFAULT_SUBJECT).get('dateOfBirth')
+        diag = self.patient.get('cancerCondition', defaults.DEFAULT_CANCER_CONDITION)[0].get('dateOfDiagnosis')
 
         if age is not None and diag is not None: return self.__get_age(age, diag)
         return None
@@ -87,7 +87,7 @@ class PatientInfoParser:
     '''__encode_one_hot_status(): Returns an optional integer where 1 represents an improvement in patient health and 0 represents a   
             decline in patient health'''
     def __encode_one_hot_status(self) -> Optional[int]:
-        cancer_status = self.patient.get('cancerDiseaseStatus', DEFAULT_LABEL)
+        cancer_status = self.patient.get('cancerDiseaseStatus', defaults.DEFAULT_LABEL)
 
         if cancer_status is not None: return self.__get_status(cancer_status.get('label'))
         return None
@@ -95,29 +95,29 @@ class PatientInfoParser:
     '''__ encode_one_hot_stage(): Returns a Dictionary with values representing the stage of the cancer/tumour/nodes'''
     def __encode_one_hot_stage(self) -> Dict[str, int]:
         stage, primary, nodes = None, None, None
-        cancer_stagings = self.patient.get('cancerCondition', DEFAULT_CANCER_CONDITION)[0].get('tnmStaging')
+        cancer_stagings = self.patient.get('cancerCondition', defaults.DEFAULT_CANCER_CONDITION)[0].get('tnmStaging')
 
         if cancer_stagings is not None:
-            stage_group = cancer_stagings[0].get('stageGroup', DEFAULT_GROUP)
-            stage = self.__get_stage(stage_group.get('dataValue', DEFAULT_LABEL).get('label', None))
+            stage_group = cancer_stagings[0].get('stageGroup', defaults.DEFAULT_GROUP)
+            stage = self.__get_stage(stage_group.get('dataValue', defaults.DEFAULT_LABEL).get('label', None))
 
-            primary_group = cancer_stagings[0].get('primaryTumorCategory', DEFAULT_GROUP)
-            primary = self.__get_primary(primary_group.get('dataValue', DEFAULT_LABEL).get('label', None))
+            primary_group = cancer_stagings[0].get('primaryTumorCategory', defaults.DEFAULT_GROUP)
+            primary = self.__get_primary(primary_group.get('dataValue', defaults.DEFAULT_LABEL).get('label', None))
 
-            nodes_group = cancer_stagings[0].get('regionalNodesCategory', DEFAULT_GROUP)
-            nodes = self.__get_nodes(nodes_group.get('dataValue', DEFAULT_LABEL).get('label', None))
+            nodes_group = cancer_stagings[0].get('regionalNodesCategory', defaults.DEFAULT_GROUP)
+            nodes = self.__get_nodes(nodes_group.get('dataValue', defaults.DEFAULT_LABEL).get('label', None))
 
         return {'stage': stage, 'primary': primary, 'nodes': nodes}
     
     '''__get_cancer_type(): Passed in a JSON Object in the form of a dictionary and returns an optional string corresponding to 
             the cancer type'''
     def __get_cancer_type(self) -> Optional[str]:
-        return self.patient.get('cancerCondition', DEFAULT_CANCER_CONDITION)[0].get('code', DEFAULT_LABEL).get('label', None)
+        return self.patient.get('cancerCondition', defaults.DEFAULT_CANCER_CONDITION)[0].get('code', defaults.DEFAULT_LABEL).get('label', None)
     
     '''__get_patient_meds(): Returns a Dictionary with string keys and int values that display the unique medications as keys and 
             display the number of times the specified patient takes the given medication as its value'''
     def __get_patient_meds(self) -> Dict[str, int]:
-        meds = self.patient.get('medicationStatement', DEFAULT_MEDS)
+        meds = self.patient.get('medicationStatement', defaults.DEFAULT_MEDS)
 
         meds_dict = dict.fromkeys(self.uniq_meds, 0)
         for med in meds:
@@ -128,7 +128,7 @@ class PatientInfoParser:
     '''__get_patient_procedures(): Returns a Dictionary of string keys and int values where the keys represent the different procedure 
             types and the values represent the number of times that procedure was performed on the specified patient'''
     def __get_patient_procedures(self) -> Dict[str, int]:
-        procedures = self.patient.get('cancerRelatedProcedures', DEFAULT_PROCEDURES)
+        procedures = self.patient.get('cancerRelatedProcedures', defaults.DEFAULT_PROCEDURES)
 
         procedures_dict = dict.fromkeys(self.uniq_procedures, 0)
         for procedure in procedures:

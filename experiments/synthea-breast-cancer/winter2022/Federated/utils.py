@@ -2,7 +2,7 @@
 
 # Imports - Helpers
 from helpers.parsers import PatientInfoParser, UniqueInfoParser
-from helpers.defaults import *
+from helpers import defaults
 
 # Imports - Processing
 from sklearn.linear_model import LogisticRegression
@@ -179,7 +179,7 @@ def load_data() -> Dataset:
         return (X_train, y_train), (X_test, y_test)
 
     # Request information from GraphQL
-    data_json = get_request(DEFAULT_QUERY)
+    data_json = get_request(defaults.DEFAULT_QUERY)
 
     # Apply preprocessing function
     preproc_df = preprocess_mcode_req(data_json)

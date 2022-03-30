@@ -1,7 +1,7 @@
 '''parsers.py: A module with helper functions/classes to support the EDA parsing process in SyntheaEDA.ipynb'''
 
 import re
-import defaults
+from helpers import defaults
 from datetime import datetime
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any

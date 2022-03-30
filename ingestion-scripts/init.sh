@@ -12,7 +12,7 @@ help ()
    echo "Optionally runs ingest.sh on a specified file or directory."
    echo
    echo "Usage:"
-   echo "   ./ingestion_scripts/init.sh [options] PROJECT_TITLE DATASET_TITLE TABLE_TITLE TABLE_TYPE"
+   echo "   ./ingestion-scripts/init.sh [options] PROJECT_TITLE DATASET_TITLE TABLE_TITLE TABLE_TYPE"
    echo "Arguments:"
    echo "   PROJECT_TITLE   The title of the newly created project."
    echo "   DATASET_TITLE   The title of the newly created dataset."
@@ -36,18 +36,18 @@ help ()
 # Creates a project in Katsu
 # Outputs the UUID of the created project
 _create_project () {
-    docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/create_proj.py $proj_title $server_url
+    docker exec -it katsu python /app/chord_metadata_service/ingestion-scripts/create_proj.py $proj_title $server_url
 }
 
 # Creates a dataset in Katsu
 # Outputs the UUID of the created dataset
 _create_dset () {
-    docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/create_dset.py $PROJ_UUID $dset_title $server_url
+    docker exec -it katsu python /app/chord_metadata_service/ingestion-scripts/create_dset.py $PROJ_UUID $dset_title $server_url
 }
 # Creates a dataset in Katsu
 # Outputs the UUID of the created table
 _create_table () {
-    docker exec -it katsu python /app/chord_metadata_service/ingestion_scripts/create_table.py $DSET_UUID $table_title $table_type $server_url
+    docker exec -it katsu python /app/chord_metadata_service/ingestion-scripts/create_table.py $DSET_UUID $table_title $table_type $server_url
 }
 
 ################################# Variable default values
@@ -121,18 +121,18 @@ echo
 if [ ! -z "${ingest_filepath}" ]; then
     if (( $local > 0 )); then
         echo "Ingesting local file " $ingest_filepath
-        bash ingestion_scripts/ingest.sh -l $TABLE_UUID $ingest_strategy $ingest_filepath
+        bash ingestion-scripts/ingest.sh -l $TABLE_UUID $ingest_strategy $ingest_filepath
     else
         echo "Ingesting containerized file " $ingest_filepath
-        bash ingestion_scripts/ingest.sh $TABLE_UUID $ingest_strategy $ingest_filepath
+        bash ingestion-scripts/ingest.sh $TABLE_UUID $ingest_strategy $ingest_filepath
     fi
 elif [ ! -z "${ingest_dirpath}" ]; then
     if (( $local > 0 )); then
         echo "Ingesting local dir " $ingest_dirpath
-        bash ingestion_scripts/ingest.sh -l -d $TABLE_UUID $ingest_strategy $ingest_dirpath
+        bash ingestion-scripts/ingest.sh -l -d $TABLE_UUID $ingest_strategy $ingest_dirpath
     else
         echo "Ingesting containerized dir " $ingest_dirpath
-        bash ingestion_scripts/ingest.sh -d $TABLE_UUID $ingest_strategy $ingest_dirpath
+        bash ingestion-scripts/ingest.sh -d $TABLE_UUID $ingest_strategy $ingest_dirpath
     fi
 fi
 

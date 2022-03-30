@@ -8,7 +8,7 @@ services:
         ports:
         - "5000:8080"
         environment:
-            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/graphql"
+            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
     
     db-katsu:
         image: postgres:latest
@@ -20,22 +20,25 @@ services:
         ports:
         - "5001:5432"
         volumes:
-        - katsu-db-data:/var/lib/postgresql/data
+        - db-katsu-data:/var/lib/postgresql/data
 
     katsu:
-        image: ghcr.io/candig/candig-katsu:latest
+        build:
+            context: services/katsu
+            args:
+                - venv_python=3.7
+                - alpine_version=3.13
         container_name: katsu
         volumes:
         - ./services/katsu_entrypoint.sh:/app/katsu_entrypoint.sh
-        - ../federated-learning/ingestion_scripts/internal:/app/chord_metadata_service/ingestion_scripts
+        - ../federated-learning/ingestion-scripts/internal:/app/chord_metadata_service/ingestion-scripts
         entrypoint: ["/app/katsu_entrypoint.sh"]
         ports:
         - "5002:8000"
         depends_on:
         - db-katsu
         environment:
-            POSTGRES_HOST: "
-            "
+            POSTGRES_HOST: "db-katsu"
             POSTGRES_PORT: 5432
             POSTGRES_DATABASE: "${KATSU_POSTGRES_DB:-metadata}"
             POSTGRES_USER: "${KATSU_POSTGRES_USER:-admin}"
@@ -47,17 +50,8 @@ services:
         ports:
         - "5003:7999"
         environment:
-            CANDIG_SERVER: "http://candig-dev:4000"
-            KATSU_API: "http://katsu:8000/api"
-
-    fl-client-0:
-        build: services/fl-client
-        container_name: fl-client-0
-        depends_on:
-        - fl-server
-        environment:
-            FLOWER_SERVER_URL: "fl-server:8080"
-            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/graphql"
+            GRAPHQL_CANDIG_SERVER: "http://candig-dev:4000"
+            GRAPHQL_KATSU_API: "http://katsu:8000/api"
 
     fl-client-1:
         build: services/fl-client
@@ -66,9 +60,19 @@ services:
         - fl-server
         environment:
             FLOWER_SERVER_URL: "fl-server:8080"
-            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/graphql"
-        
+            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
+            FLOWER_CLIENT_NUMBER: "1"
+
+    fl-client-2:
+        build: services/fl-client
+        container_name: fl-client-2
+        depends_on:
+        - fl-server
+        environment:
+            FLOWER_SERVER_URL: "fl-server:8080"
+            GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
+            FLOWER_CLIENT_NUMBER: "2"
+
 volumes:
+    db-katsu-data:
     
-    katsu-db-data:
-        

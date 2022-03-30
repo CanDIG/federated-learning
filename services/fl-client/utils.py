@@ -2,7 +2,7 @@
 
 # Imports - Helpers
 from helpers.parsers import PatientInfoParser, UniqueInfoParser
-from helpers.defaults import *
+from helpers import defaults
 
 # Imports - Processing
 from sklearn.linear_model import LogisticRegression
@@ -81,9 +81,9 @@ def load_data() -> Dataset:
         """
 
         if table_id:
-            return re.sub(r'TABLE_UUID', table_id, DEFAULT_QUERY)
+            return re.sub(r'TABLE_UUID', table_id, defaults.DEFAULT_QUERY)
         
-        return re.sub(r'mcodePackets\(.*\)', "mcodePackets", DEFAULT_QUERY)
+        return re.sub(r'mcodePackets\(.*\)', "mcodePackets", defaults.DEFAULT_QUERY)
 
     def get_request(query: str) -> Response:
         """

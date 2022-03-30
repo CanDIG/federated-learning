@@ -30,11 +30,13 @@ help ()
    echo "Usage:"
    echo "   ./quickstart.sh [options]"
    echo "Options:"
-   echo "   -i <PATH>     Ingest Data present at Path into Katsu"
-   echo "   -p <PORT>     Specify Port Number to expose. Defaults to 5000"
-   echo "   -n <SITES>    Number of Sites to federate. Defaults to 2"
-   echo "   -s            Keep all of the data in one dataset - Useful only if -i specified"
-   echo "   -h            Display this help text"
+   echo "   -i <INGEST_PATH>     Ingest Data present at Path into Katsu"
+   echo "   -p <PORT>            Specify Port Number to expose. Defaults to 5000"
+   echo "   -n <SITES>           Number of Sites to federate. Defaults to 2"
+   echo "   -r <ROUNDS>          Number of rounds of trials to conduct. Defaults to 100."
+   echo "   -e <EXPERIMENT_PATH> Pass in the path to the experiment folder. Defaults to ./experiment"
+   echo "   -s                   Keep all of the data in one dataset - Useful only if -i specified"
+   echo "   -h                   Display this help text"
 }
 
 ################################################################################
@@ -58,14 +60,14 @@ check_path()
     SYNTHEA_PATH=${1}
     
     if [[ ${SYNTHEA_PATH} =~ ^-.* ]]; then
-        error "The ingestion PATH '${SYNTHEA_PATH}' cannot be an option"
+        error "The path '${SYNTHEA_PATH}' cannot be an option"
     fi
 
     ls ${SYNTHEA_PATH} 2>/dev/null 1>/dev/null  
     SYNTHEA_PATH_CODE=$?
 
     if [[ ${SYNTHEA_PATH_CODE} -ne 0 ]]; then
-        error "There was an error in finding the ingestion PATH '${SYNTHEA_PATH}': Error Code ${SYNTHEA_PATH_CODE}"
+        error "There was an error in finding the path '${SYNTHEA_PATH}': Error Code ${SYNTHEA_PATH_CODE}"
     fi
 
     if ! [[ ${SYNTHEA_PATH} =~ .*/$ ]]; then
@@ -75,18 +77,33 @@ check_path()
     echo ${SYNTHEA_PATH}
 }
 
+# Check to see if number entered is positive integer
+check_positive()
+{
+    NUM=${1}
+    ARG_NAME=${2}
+
+    if ! [[ "${NUM}" =~ ^[0-9]*$ ]]; then
+        error "The option ${ARG_NAME} must be a positive integer. You entered ${NUM}"
+    elif ! [[ ${NUM} -ge 1 ]]; then
+        error "The option ${ARG_NAME} must be greater than 0. You entered ${NUM}"
+    fi
+
+    echo ${NUM}
+}
+
 # Check to see if the passed in port is valid
 check_port()
 {
     BASE_PORT=${1}
+    echo $(check_positive ${BASE_PORT} -p)
+}
 
-    if ! [[ "${BASE_PORT}" =~ ^[0-9]*$ ]]; then
-        error "The argument PORT must be a positive integer. You entered ${BASE_PORT}"
-    elif ! [[ ${BASE_PORT} -ge 1 ]]; then
-        error "The argument PORT must be greater than 0. You entered ${BASE_PORT}"
-    fi
-
-    echo ${BASE_PORT}
+# Check to see if the number of rounds is valid
+check_rounds()
+{
+    ROUNDS=${1}
+    echo $(check_positive ${ROUNDS} -r)
 }
 
 # Check to see if the number of sites is valid
@@ -95,7 +112,7 @@ check_sites()
     NUM_SITES=${1}
 
     if ! [[ "${NUM_SITES}" =~ ^[0-9]+$ ]]; then
-        error "The option SITES must be a non-negative integer. You entered: ${NUM_SITES}"
+        error "The option -n must be a non-negative integer. You entered: ${NUM_SITES}"
     elif ! [[ ${NUM_SITES} -ge 2 ]]; then
         error "2 or more clients are required to set up the federated-learning service. You entered: ${NUM_SITES}"
     fi
@@ -121,7 +138,7 @@ check_value()
 ################################################################################
 
 # Read in the script options
-while getopts ":i:p:n:sh" opt; do
+while getopts ":i:p:n:r:e:sh" opt; do
   case $opt in
     i)  SYNTHEA_PATH=$(check_path ${OPTARG})
         TO_INGEST=1
@@ -129,6 +146,10 @@ while getopts ":i:p:n:sh" opt; do
     p)  BASE_PORT=$(check_port ${OPTARG})
         ;;
     n)  NUM_SITES=$(check_sites ${OPTARG})
+        ;;
+    r)  ROUNDS=$(check_rounds ${OPTARG})
+        ;;
+    e)  EXPERIMENT_PATH=$(check_path ${OPTARG})
         ;;
     s)  SAME_DATA=1
         ;;
@@ -148,16 +169,20 @@ SAME_DATA=$(check_value ${SAME_DATA} 0)
 BASE_PORT=$(check_value ${BASE_PORT} 5000)
 NUM_SITES=$(check_value ${NUM_SITES} 2)
 TO_INGEST=$(check_value ${TO_INGEST} 0)
+ROUNDS=$(check_value ${ROUNDS} 100)
+EXPERIMENT_PATH=$(check_path $(check_value ${EXPERIMENT_PATH} ./experiment))
 
 # Display Arguments
-echo "The following arguments have been provided:"
-echo "      SYNTHEA_PATH: ${SYNTHEA_PATH}"
-echo "      NUM_SITES: ${NUM_SITES}"
-echo "      BASE_PORT: ${BASE_PORT}"
+echo "The following values have been selected:"
+echo "      INGESTION PATH: ${SYNTHEA_PATH}"
+echo "      NUMBER OF SITES: ${NUM_SITES}"
+echo "      BASE PORT: ${BASE_PORT}"
+echo "      NUMBER OF ROUNDS: ${ROUNDS}"
+echo "      EXPERIMENT PATH: ${EXPERIMENT_PATH}"
 
 # Create Docker-Compose File
 echo
-$PWD/orchestration-scripts/configure_docker_compose.py ${BASE_PORT} ${NUM_SITES}
+$PWD/orchestration-scripts/configure_docker_compose.py ${BASE_PORT} ${NUM_SITES} ${ROUNDS} ${EXPERIMENT_PATH}
 
 # Start Katsu & GraphQL-interface
 echo
@@ -167,18 +192,13 @@ echo "Sleeping for $SLEEP_TIME seconds to let Docker containers complete initial
 
 sleep ${SLEEP_TIME}
 
-CLIENT_PATH="${PWD}/services/fl-client/"
-SERVER_PATH="${PWD}/services/fl-server/"
+TABLE_PATH="${PWD}/experiments/synthea-breast-cancer/winter2022/experiment/helpers/"
 
 # Ingest Data, if necessary
 if [[ ${TO_INGEST} -eq 1 ]]; then
     # Check to see if Table Files Exist
-    if [[ -e "${CLIENT_PATH}tables.txt" ]]; then
-        rm "${CLIENT_PATH}tables.txt"
-    fi
-
-    if [[ -e "${SERVER_PATH}tables.txt" ]]; then
-        rm "${SERVER_PATH}tables.txt"
+    if [[ -e "${TABLE_PATH}tables.txt" ]]; then
+        rm "${TABLE_PATH}tables.txt"
     fi
 
     # Ingest Data into one Table
@@ -186,8 +206,7 @@ if [[ ${TO_INGEST} -eq 1 ]]; then
         echo
         ingestion=$(bash $PWD/ingestion-scripts/init.sh -l -d ${SYNTHEA_PATH} ${PROJECT_NAME} ${DATASET_NAME} ${TABLE_NAME} mcodepacket | tee /dev/tty)
 
-        echo "$ingestion" | grep "TABLE_UUID" >> "${CLIENT_PATH}tables.txt"
-        echo "$ingestion" | grep "TABLE_UUID" >> "${SERVER_PATH}tables.txt"
+        echo "$ingestion" | grep "TABLE_UUID" >> "${TABLE_PATH}tables.txt"
     else
         # Ingest Data into multiple Tables
         SITE_DIRS=()
@@ -217,8 +236,7 @@ if [[ ${TO_INGEST} -eq 1 ]]; then
 
             ingestion=$(bash $PWD/ingestion-scripts/init.sh -l -d "${i}" "${PROJECT_NAME}-${COUNTER}" "${DATASET_NAME}-${COUNTER}" "${TABLE_NAME}-${COUNTER}" mcodepacket | tee /dev/tty)
 
-            echo "$ingestion" | grep "TABLE_UUID" >> "${CLIENT_PATH}tables.txt"
-            echo "$ingestion" | grep "TABLE_UUID" >> "${SERVER_PATH}tables.txt"
+            echo "$ingestion" | grep "TABLE_UUID" >> "${TABLE_PATH}tables.txt"
 
             rm -rf "${i}"
 

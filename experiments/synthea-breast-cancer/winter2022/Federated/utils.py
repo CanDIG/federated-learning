@@ -31,6 +31,8 @@ LogRegParams = Union[XY, Tuple[np.ndarray]]
 XYList = List[XY]
 
 # Error Class
+
+
 class DataFetchError(Exception):
     """"
     Exception raised for failing to fetch data.
@@ -40,6 +42,7 @@ class DataFetchError(Exception):
 
     def __init__(self, message: str):
         self.message = message
+
 
 def load_data() -> Dataset:
     """Queries the GraphQL-interface for all MCODE data and preprocesses it.
@@ -51,11 +54,11 @@ def load_data() -> Dataset:
 
         Arguments:
             query: str containing GraphQL formatted query
-        
+
         Returns:
             Response
         """
-        
+
         graphql_url = os.getenv("GRAPHQL_INTERFACE_URL", None)
 
         if graphql_url is None:
@@ -63,8 +66,9 @@ def load_data() -> Dataset:
 
         request = requests.post(graphql_url, json={"query": query})
         if request.status_code != 200:
-            raise DataFetchError(f"Could not query GraphQL interface. Error code: {request.status_code}")
-        
+            raise DataFetchError(
+                f"Could not query GraphQL interface. Error code: {request.status_code}")
+
         return request
 
     def create_dataframe(patients: List[Dict[str, Any]]) -> DataFrame:
@@ -73,15 +77,17 @@ def load_data() -> Dataset:
 
         Arguments:
             patients: List[Dict[str, Any]] containing patient information
-        
+
         Returns:
             pd.Dataframe
         """
-        
+
         df = pd.DataFrame(patients)
-        df = df.dropna(subset=['numberOfMeds', 'nodes', 'primary', 'stage', 'sex', 'diagnosisAge', 'cancerStatus'])
+        df = df.dropna(subset=['numberOfMeds', 'nodes', 'primary',
+                       'stage', 'sex', 'diagnosisAge', 'cancerStatus'])
         df = df.loc[df['sex'] != 0]
-        df = df.loc[df['cancerType'] == 'Malignant neoplasm of breast (disorder)']
+        df = df.loc[df['cancerType'] ==
+                    'Malignant neoplasm of breast (disorder)']
         df = df.drop(columns=['cancerType', 'sex'])
         return df.reset_index(drop=True)
 
@@ -97,7 +103,8 @@ def load_data() -> Dataset:
         """
 
         # Get JSON response
-        patient_info_json = req.json().get('data').get('katsuDataModels').get('mcodeDataModels').get('mcodePackets')
+        patient_info_json = req.json().get('data').get(
+            'katsuDataModels').get('mcodeDataModels').get('mcodePackets')
 
         # Defines unique medications and procedure types
         uniq_finder = UniqueInfoParser(patient_info_json)
@@ -126,42 +133,74 @@ def load_data() -> Dataset:
             patient_info_dict['cancerType'] = patient_info.cancer_type
             patient_info_dict['cancerStatus'] = patient_info.cancer_status
             patient_info_list.append(patient_info_dict)
-        
+
         return create_dataframe(patient_info_list)
-    
+
     def create_dataset_splits(df: DataFrame) -> Dataset:
         """
         Split data into training and testing sets from passed in DataFrame, in the form of a tuple of tuples, ((X,Y),(X,Y))
 
         Arguments: 
             df: DataFrame containing full Dataset
-        
+
         Response:
             Dataset object
         """
-        
+
         # Split into X and y
         X = []
         y = []
 
         for _, row in df.iterrows():
-            X.append([row.surgical, row.radiation, row.cancerStatus, row.diagnosisAge, row.primary, row.nodes, row.numberOfMeds])
+            X.append([row.surgical, row.radiation, row.cancerStatus,
+                     row.diagnosisAge, row.primary, row.nodes, row.numberOfMeds])
             y.append(row.stage)
-        
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state = RANDOM_STATE)
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=RANDOM_STATE)
         return scale_data(((X_train, y_train), (X_test, y_test)))
-    
+
+    def undersample_majority_class(df: DataFrame) -> DataFrame:
+        """
+        If this function is being used with the provided demo data ingested, then will be an overrepresentation of stage 2 and 3. 
+        To counter the effects of this
+        on a logistic regression classifier, we massively undersample this majority classes to be equal to that of the minority class.
+
+        Arguments:
+        df: pd.DataFrame
+
+        Returns:
+        Tuple[pd.DataFrame, pd.Series]
+        """
+        stage_1 = df[df["stage"] == 1]
+        stage_2 = df[df["stage"] == 2]
+        stage_3 = df[df["stage"] == 3]
+        stage_4 = df[df["stage"] == 4]
+
+        sample_size = min([len(stage_1), len(stage_2),
+                          len(stage_3), len(stage_4)])
+
+        stage_1_new = stage_1.sample(n=sample_size, random_state=RANDOM_STATE)
+        stage_2_new = stage_2.sample(n=sample_size, random_state=RANDOM_STATE)
+        stage_3_new = stage_3.sample(n=sample_size, random_state=RANDOM_STATE)
+        stage_4_new = stage_4.sample(n=sample_size, random_state=RANDOM_STATE)
+
+        ml_sample = pd.concat(
+            [stage_4_new, stage_3_new, stage_2_new, stage_1_new])
+
+        return ml_sample
+
     def scale_data(data: Dataset) -> Dataset:
         """
         Scale input data using sklearn StandardScaler to prepare for testing
 
         Arguments:
             data: Dataset object containing training and testing data
-        
+
         Returns:
             Dataset
         """
-        
+
         scaler = StandardScaler()
 
         training_set = data[0]
@@ -175,7 +214,7 @@ def load_data() -> Dataset:
         scaler.fit(X_train)
         X_train = scaler.transform(X_train)
         X_test = scaler.transform(X_test)
-        
+
         return (X_train, y_train), (X_test, y_test)
 
     # Request information from GraphQL
@@ -185,16 +224,16 @@ def load_data() -> Dataset:
     preproc_df = preprocess_mcode_req(data_json)
 
     # Split into train/test
-    return create_dataset_splits(preproc_df)
+    return create_dataset_splits(undersample_majority_class(preproc_df))
 
 
 def get_model_parameters(model: LogisticRegression) -> LogRegParams:
     """
     Returns the paramters of a sklearn LogisticRegression model.
-    
+
     Arguments:
         model: LogisticRegression model whose params are needed 
-    
+
     Returns:
         LogRegParams
     """
@@ -209,11 +248,11 @@ def get_model_parameters(model: LogisticRegression) -> LogRegParams:
 def set_model_params(model: LogisticRegression, params: LogRegParams) -> LogisticRegression:
     """
     Sets the parameters of a sklean LogisticRegression model.
-    
+
     Arguments:
         model: LogisticRegression model
         params: LogRegParams to implement in the model
-    
+
     Returns:
         LogisticRegression
     """
@@ -231,9 +270,9 @@ def set_initial_params(model: LogisticRegression):
     to sklearn.linear_model.LogisticRegression documentation for more
     information.
     """
-    
-    n_classes = 4  # We are training a binary classifier
-    n_features = 7  # Number of features in dataset
+
+    n_classes = 4
+    n_features = 7
     model.classes_ = np.array([i for i in range(n_classes)])
     model.coef_ = np.zeros((n_classes, n_features))
     if model.fit_intercept:

@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from experiment.helpers import defaults, parsers
 from pandas.core.frame import DataFrame
 from requests.models import Response
+import experiment.settings
 import pandas as pd
 import numpy as np
 import re
@@ -220,9 +221,6 @@ class FederatedLogReg(Experiment):
         Returns:
             Dataset
         """
-
-        # Get Client Number
-        # client_num = os.getenv("FLOWER_CLIENT_NUMBER")
         
         # Get Query String
         query = self.create_query()
@@ -260,10 +258,10 @@ class FederatedLogReg(Experiment):
         
 
 experiment = FederatedLogReg(
-    resource_url=os.getenv("GRAPHQL_INTERFACE_URL"),
-    random_state=1729,
-    filename=f"{os.getcwd()}/experiment/helpers/tables.txt",
-    client_number=os.getenv("FLOWER_CLIENT_NUMBER"),
-    n_classes=4,
-    n_features=7
+    filename=experiment.settings.FL_TABLE_FILE,
+    n_classes=experiment.settings.FL_N_CLASSES,
+    n_features=experiment.settings.FL_N_FEATURES,
+    resource_url=experiment.settings.FL_GRAPHQL_URL,
+    random_state=experiment.settings.FL_RANDOM_STATE,
+    client_number=experiment.settings.FL_CLIENT_NUMBER,
 )

@@ -11,7 +11,7 @@ services:
             GRAPHQL_INTERFACE_URL: "http://gql-interface:7999/"
             SERVER_INTERNAL_HOST: "0.0.0.0"
             SERVER_INTERNAL_PORT: "8080"
-            ROUNDS: "500"
+            ROUNDS: "100"
         volumes:
         - ./experiments/mock-experiment/bases:/src/bases
         - ./experiments/synthea-breast-cancer/winter2022/Federated/experiment/:/src/experiment

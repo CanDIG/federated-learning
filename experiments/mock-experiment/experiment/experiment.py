@@ -1,6 +1,6 @@
 from bases.base_experiment import Experiment
+import experiment.settings
 from typing import Optional
-import os
 
 class MockExperiment(Experiment):
     """
@@ -26,6 +26,6 @@ class MockExperiment(Experiment):
         return "model.coef_, model.intercept_ = (0, 0)"
 
 experiment = MockExperiment(
-    resource_url=os.getenv("GRAPHQL_INTERFACE_URL"),
-    random_state=1
+    resource_url= experiment.settings.GQL_INTERFACE,
+    random_state=experiment.settings.RANDOM_STATE
 )

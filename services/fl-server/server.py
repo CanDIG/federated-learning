@@ -3,7 +3,9 @@ import os
 import flwr as fl
 import numpy as np
 from typing import Dict, List, Optional, Tuple
-from experiment import experiment, model, eval_fn
+from experiment import experiment, model, eval_fn, settings
+
+CHECKPOINT_PATH = 'experiment/checkpoints'
 
 def fit_round(rnd: int) -> Dict:
     """Send round number to client."""
@@ -30,13 +32,13 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
     ) -> Optional[fl.common.Weights]:
         aggregated_weights = super().aggregate_fit(rnd, results, failures)
 
-        if not os.path.exists('experiment/checkpoints'):
-            os.makedirs('experiment/checkpoints')
+        if not os.path.exists(CHECKPOINT_PATH):
+            os.makedirs(CHECKPOINT_PATH)
 
         if aggregated_weights is not None and rnd % 10 == 0:
             # Save aggregated_weights
             print(f"Saving round {rnd} aggregated_weights...")
-            np.savez(f"experiment/checkpoints/round-{rnd}-weights.npz", *aggregated_weights)
+            np.savez(f"{CHECKPOINT_PATH}/round-{rnd}-weights.npz", *aggregated_weights)
         
         return aggregated_weights
 
@@ -46,11 +48,11 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
 if __name__ == "__main__":
     experiment.set_initial_params(model)
     strategy = SaveModelStrategy(
-        min_available_clients=2,
+        min_available_clients=settings.FL_MIN_CLIENTS,
         eval_fn=get_eval_fn(),
         on_fit_config_fn=fit_round,
     )
 
-    server_url = f'{os.getenv("SERVER_INTERNAL_HOST", "0.0.0.0")}:{os.getenv("SERVER_INTERNAL_PORT", "8080")}'
-    fl.server.start_server(server_url, strategy=strategy, config={"num_rounds": int(os.getenv("ROUNDS", "100"))})
+    server_url = f'{settings.FL_INTERNAL_HOST}:{settings.FL_INTERNAL_PORT}'
+    fl.server.start_server(server_url, strategy=strategy, config={"num_rounds": settings.FL_ROUNDS})
     print(f"fl server started at {server_url}")

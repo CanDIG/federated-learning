@@ -1,0 +1,4 @@
+import os
+
+RANDOM_STATE=1
+GQL_INTERFACE = os.getenv("GRAPHQL_INTERFACE_URL")

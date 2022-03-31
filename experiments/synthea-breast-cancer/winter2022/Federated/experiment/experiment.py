@@ -1,77 +1,62 @@
 # Adapted from https://github.com/adap/flower/tree/main/examples/sklearn-logreg-mnist
 
-# Imports - Helpers
-from helpers.parsers import PatientInfoParser, UniqueInfoParser
-from helpers import defaults
-
-# Imports - Processing
-from sklearn.linear_model import LogisticRegression
+from typing import List, Dict, Any, Optional, Tuple, Union
+from bases.base_experiment import Experiment
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
+from experiment.helpers import defaults, parsers
 from pandas.core.frame import DataFrame
-import numpy as np
-import pandas as pd
-
-# Imports - Typing
-from typing import List, Dict, Any, Tuple, Union
-
-# Imports - Requests
 from requests.models import Response
-import requests
+import experiment.settings
+import pandas as pd
+import numpy as np
+import re
 import os
 
-
 # Constants
-RANDOM_STATE = 1729
-XY = Tuple[pd.DataFrame, np.ndarray]
-
-# Types
+XY = Tuple[DataFrame, np.ndarray]
 Dataset = Tuple[XY, XY]
 LogRegParams = Union[XY, Tuple[np.ndarray]]
-XYList = List[XY]
 
-# Error Class
-
-
-class DataFetchError(Exception):
-    """"
-    Exception raised for failing to fetch data.
-        Attributes:
-        message -- A message detailing the failing status code of the request
+class FederatedLogReg(Experiment):
+    """
+    Implementation of Synthea Federated Logistic Regression Classifier
     """
 
-    def __init__(self, message: str):
-        self.message = message
+    def __init__(
+        self, 
+        resource_url: Optional[str] = None, 
+        random_state: Optional[int] = 1, 
+        filename: Optional[str] = None, 
+        client_number: Optional[str] = None,
+        n_classes: Optional[int] = None,
+        n_features: Optional[int] = None) -> None:
 
+        self.filename = filename
+        self.client_number = client_number
+        self.table_id = self.__find_table_id()
+        self.n_classes = n_classes
+        self.n_features = n_features
+        super().__init__(resource_url, random_state)
 
-def load_data() -> Dataset:
-    """Queries the GraphQL-interface for all MCODE data and preprocesses it.
-    """
-
-    def get_request(query: str) -> Response:
+    def __find_table_id(self) -> Optional[str]:
         """
-        Returns a Response object for a GraphQL query that is passed in
-
-        Arguments:
-            query: str containing GraphQL formatted query
-
+        Returns an optional string denoting the katsu db table_id for an optional client number, stored on a file called filename
+        
         Returns:
-            Response
+            Optional[str]
         """
 
-        graphql_url = os.getenv("GRAPHQL_INTERFACE_URL", None)
-
-        if graphql_url is None:
-            raise DataFetchError(f"No GraphQL interface URL specified")
-
-        request = requests.post(graphql_url, json={"query": query})
-        if request.status_code != 200:
-            raise DataFetchError(
-                f"Could not query GraphQL interface. Error code: {request.status_code}")
-
-        return request
-
-    def create_dataframe(patients: List[Dict[str, Any]]) -> DataFrame:
+        with open(self.filename, "r") as f:
+            tables = [table.strip("TABLE_UUID:").strip() for table in f.readlines()]
+        
+        if self.client_number is not None:
+            return tables[int(self.client_number) - 1]
+        
+        return None
+    
+    def __create_dataframe(self, patients: List[Dict[str, Any]]) -> DataFrame:
         """
         Creates a Pandas Dataframe object from a List of Dictionaries containing the collected mCODE data
 
@@ -90,8 +75,8 @@ def load_data() -> Dataset:
                     'Malignant neoplasm of breast (disorder)']
         df = df.drop(columns=['cancerType', 'sex'])
         return df.reset_index(drop=True)
-
-    def preprocess_mcode_req(req: Response) -> DataFrame:
+    
+    def __preprocess_mcode_req(self, req: Response) -> DataFrame:
         """
         Cleans Katsu-ingested + GraphQL served MCODE data and prepares for other preprocessing functions.
 
@@ -107,7 +92,7 @@ def load_data() -> Dataset:
             'katsuDataModels').get('mcodeDataModels').get('mcodePackets')
 
         # Defines unique medications and procedure types
-        uniq_finder = UniqueInfoParser(patient_info_json)
+        uniq_finder = parsers.UniqueInfoParser(patient_info_json)
         uniq_meds = uniq_finder.get_uniq_meds()
         uniq_procedures = uniq_finder.get_uniq_procedures()
 
@@ -115,7 +100,7 @@ def load_data() -> Dataset:
         patient_info_list = []
         for patient in patient_info_json:
             patient_info_dict = {}
-            patient_info = PatientInfoParser(
+            patient_info = parsers.PatientInfoParser(
                 uniq_meds, uniq_procedures, patient).get_patient_data()
 
             number_of_meds = sum(
@@ -133,10 +118,10 @@ def load_data() -> Dataset:
             patient_info_dict['cancerType'] = patient_info.cancer_type
             patient_info_dict['cancerStatus'] = patient_info.cancer_status
             patient_info_list.append(patient_info_dict)
-
-        return create_dataframe(patient_info_list)
-
-    def create_dataset_splits(df: DataFrame) -> Dataset:
+        
+        return self.__create_dataframe(patient_info_list)
+    
+    def __create_dataset_splits(self, df: DataFrame) -> Dataset:
         """
         Split data into training and testing sets from passed in DataFrame, in the form of a tuple of tuples, ((X,Y),(X,Y))
 
@@ -155,12 +140,11 @@ def load_data() -> Dataset:
             X.append([row.surgical, row.radiation, row.cancerStatus,
                      row.diagnosisAge, row.primary, row.nodes, row.numberOfMeds])
             y.append(row.stage)
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=RANDOM_STATE)
-        return scale_data(((X_train, y_train), (X_test, y_test)))
-
-    def undersample_majority_class(df: DataFrame) -> DataFrame:
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state = self.RANDOM_STATE)
+        return self.__scale_data(((X_train, y_train), (X_test, y_test)))
+    
+    def __undersample_majority_class(self, df: DataFrame) -> DataFrame:
         """
         If this function is being used with the provided demo data ingested, then will be an overrepresentation of stage 2 and 3. 
         To counter the effects of this
@@ -180,17 +164,17 @@ def load_data() -> Dataset:
         sample_size = min([len(stage_1), len(stage_2),
                           len(stage_3), len(stage_4)])
 
-        stage_1_new = stage_1.sample(n=sample_size, random_state=RANDOM_STATE)
-        stage_2_new = stage_2.sample(n=sample_size, random_state=RANDOM_STATE)
-        stage_3_new = stage_3.sample(n=sample_size, random_state=RANDOM_STATE)
-        stage_4_new = stage_4.sample(n=sample_size, random_state=RANDOM_STATE)
+        stage_1_new = stage_1.sample(n=sample_size, random_state=self.RANDOM_STATE)
+        stage_2_new = stage_2.sample(n=sample_size, random_state=self.RANDOM_STATE)
+        stage_3_new = stage_3.sample(n=sample_size, random_state=self.RANDOM_STATE)
+        stage_4_new = stage_4.sample(n=sample_size, random_state=self.RANDOM_STATE)
 
         ml_sample = pd.concat(
             [stage_4_new, stage_3_new, stage_2_new, stage_1_new])
 
         return ml_sample
-
-    def scale_data(data: Dataset) -> Dataset:
+    
+    def __scale_data(self, data: Dataset) -> Dataset:
         """
         Scale input data using sklearn StandardScaler to prepare for testing
 
@@ -216,64 +200,68 @@ def load_data() -> Dataset:
         X_test = scaler.transform(X_test)
 
         return (X_train, y_train), (X_test, y_test)
+    
+    def create_query(self) -> str:
+        """
+        Returns a str containing the GraphQL query for the specified table_id
+        
+        Returns:
+            str
+        """
 
-    # Request information from GraphQL
-    data_json = get_request(defaults.DEFAULT_QUERY)
+        if self.table_id:
+            return re.sub(r'TABLE_UUID', self.table_id, defaults.DEFAULT_QUERY)
+        
+        return re.sub(r'mcodePackets\(.*\)', "mcodePackets", defaults.DEFAULT_QUERY)
+    
+    def load_data(self) -> Dataset:
+        """
+        Queries the GraphQL-interface for all MCODE data and preprocesses it
 
-    # Apply preprocessing function
-    preproc_df = preprocess_mcode_req(data_json)
+        Returns:
+            Dataset
+        """
+        
+        # Get Query String
+        query = self.create_query()
 
-    # Split into train/test
-    return create_dataset_splits(undersample_majority_class(preproc_df))
+        # Request information from GraphQL
+        data_json = self.send_graphql_request(query)
 
+        # Apply preprocessing function
+        preproc_df = self.__preprocess_mcode_req(data_json)
 
-def get_model_parameters(model: LogisticRegression) -> LogRegParams:
-    """
-    Returns the paramters of a sklearn LogisticRegression model.
+        # Split into train/test
+        return self.__create_dataset_splits(self.__undersample_majority_class(preproc_df))
+    
+    def get_model_parameters(self, model: LogisticRegression) -> LogRegParams:
+        if model.fit_intercept:
+            return (model.coef_, model.intercept_)
+        else:
+            return (model.coef_,)
+    
+    def set_model_params(self, model: LogisticRegression, params: LogRegParams) -> LogisticRegression:
+        model.coef_ = params[0]
+        if model.fit_intercept:
+            model.intercept_ = params[1]
+        
+        return model
+    
+    def set_initial_params(self, model: LogisticRegression) -> LogisticRegression:
+        model.classes_ = np.array([i for i in range(self.n_classes)])
+        model.coef_ = np.zeros((self.n_classes, self.n_features))
 
-    Arguments:
-        model: LogisticRegression model whose params are needed 
+        if model.fit_intercept:
+            model.intercept_ = np.zeros((self.n_classes))
+        
+        return model
+        
 
-    Returns:
-        LogRegParams
-    """
-
-    if model.fit_intercept:
-        params = (model.coef_, model.intercept_)
-    else:
-        params = (model.coef_,)
-    return params
-
-
-def set_model_params(model: LogisticRegression, params: LogRegParams) -> LogisticRegression:
-    """
-    Sets the parameters of a sklean LogisticRegression model.
-
-    Arguments:
-        model: LogisticRegression model
-        params: LogRegParams to implement in the model
-
-    Returns:
-        LogisticRegression
-    """
-
-    model.coef_ = params[0]
-    if model.fit_intercept:
-        model.intercept_ = params[1]
-    return model
-
-
-def set_initial_params(model: LogisticRegression):
-    """Sets initial parameters as zeros Required since model params are
-    uninitialized until model.fit is called.
-    But server asks for initial parameters from clients at launch. Refer
-    to sklearn.linear_model.LogisticRegression documentation for more
-    information.
-    """
-
-    n_classes = 4
-    n_features = 7
-    model.classes_ = np.array([i for i in range(n_classes)])
-    model.coef_ = np.zeros((n_classes, n_features))
-    if model.fit_intercept:
-        model.intercept_ = np.zeros((n_classes,))
+experiment = FederatedLogReg(
+    filename=experiment.settings.FL_TABLE_FILE,
+    n_classes=experiment.settings.FL_N_CLASSES,
+    n_features=experiment.settings.FL_N_FEATURES,
+    resource_url=experiment.settings.FL_GRAPHQL_URL,
+    random_state=experiment.settings.FL_RANDOM_STATE,
+    client_number=experiment.settings.FL_CLIENT_NUMBER,
+)

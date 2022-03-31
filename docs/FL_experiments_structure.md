@@ -27,9 +27,9 @@ This directory houses the abstract base classes for the Experiment and FlowerCli
 #### base_experiment.py 
 Abstract Base Class, **Experiment**, used for creating federated-learning experiments.
 - Defines a method named `create_query` to generate GraphQL queries
-  - Returns a string containg the well-formed GraphQL query.
+  - Returns a string containing the well-formed GraphQL query.
 - Defines a method named `load_data` to load data for experiment.
-  - Returns a Tuple of Tuples containg the training and testing data in the following form: `(X_train, y_train), (X_test, y_test)`, where all data prefaced by `X_` are `pd.DataFrame` objects and data prefaced by `y_` are `np.ndarray` objects.
+  - Returns a Tuple of Tuples containing the training and testing data in the following form: `(X_train, y_train), (X_test, y_test)`, where all data prefaced by `X_` are `pd.DataFrame` objects and data prefaced by `y_` are `np.ndarray` objects.
 - Defines a method named `get_model_parameters` to return model parameters.
   - The data should be returned as a tuple, such that the order of the params is identical to the order in `set_model_params` and `set_initial_params`.
 - Defines a method named `set_model_params` to return a model with the updated parameters.
@@ -68,7 +68,7 @@ Defines a child class of the `Experiment` abstract base class. This child class 
 Defines a child class, `FlowerClient` of the `BaseFlowerClient` abstract base class. The child class overrides the three required abstract methods. 
 
 #### get_eval_fn.py
-Defines a function generating function called `eval_fn` that takes in an `Experiment` object, a model, as well as the X and y data for the testing set. A function that takes in a `flwr.common.Weights` parameter is returned. This function returns a tuple containing the loss of the model and a dictiontionary with extra evaluation metrics. It should be similar in nature to the **flower_client.py** evaluate function.
+Defines a function generating function called `eval_fn` that takes in an `Experiment` object, a model, as well as the X and y data for the testing set. A function that takes in a `flwr.common.Weights` parameter is returned. This function returns a tuple containing the loss of the model and a dictionary with extra evaluation metrics. It should be similar in nature to the **flower_client.py** evaluate function.
 
 #### model.py
 Defines an instance of the model to federate, with its required parameters. 
@@ -87,7 +87,7 @@ To make your own experiment, you have to create an experiment folder like the on
 
 ## Running an experiment
 
-In order to run the experiment, it makes the most sense to create your own `quickstart.sh` script to get the required docker services up in order with the parameters you need. For example, for the Winter 2022 Synthea dataset, use the follwing line of code from the root of the federated learning directory:
+In order to run the experiment, it makes the most sense to create your own `quickstart.sh` script to get the required docker services up in order with the parameters you need. For example, for the Winter 2022 Synthea dataset, use the following line of code from the root of the federated learning directory:
 
 ```bash
 ./experiments/synthea-breast-cancer/winter2022/Federated/quickstart.sh -i <INGEST-PATH> -p <PORT> -n <NUM-OF-SITES> -r <NUM-OF-ROUNDS> -e <PATH-TO-EXPERIMENT-DIRECTORY>

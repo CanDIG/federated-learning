@@ -1,5 +1,5 @@
 # Services
-The services folder provides external services that can be used by the federated-learning repo. These services are used by the `docker-compose.yml` file to generate docker containers for use in federated-learning experiments. The `fl-client` & `fl-server` services are part of the repo itself, whereas the gql-interface and katsu are git submodules. If you wish to add an external service, add it as a git submodule.
+The services folder provides external services that can be used by the federated-learning repo. These services are used by the `docker-compose.yml` file to generate docker containers for use in federated-learning experiments. The `fl-client` & `fl-server` services are part of the repo itself, whereas the `gql-interface` and `katsu` are git submodules. If you wish to add an external service, add it as a git submodule.
 
 ## Services File Tree
 ```bash

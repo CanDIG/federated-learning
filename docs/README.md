@@ -14,3 +14,12 @@ The federated-learning repository is large and complex, and hence must be split 
 
 ## Services Documentation
 - [`FL_services.md`](FL_services.md)
+
+## Federated and Non-Federated Experiment Examples
+### Synthea Breast Cancer
+#### Federated
+- [`README.md` for Fall2021](../experiments/synthea-breast-cancer/fall2021/Federated/README.md)
+- [`README.md` for Winter2022](../experiments/synthea-breast-cancer/winter2022/Federated/README.md)
+#### Non-Federated
+- [`README.md` for Fall2021](../experiments/synthea-breast-cancer/fall2021/Non-Federated/README.md)
+- [`README.md` for Winter2022](../experiments/synthea-breast-cancer/winter2022/Non-Federated/README.md)

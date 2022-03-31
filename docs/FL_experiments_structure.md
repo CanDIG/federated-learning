@@ -1,7 +1,7 @@
-# Mock Experiment
-This directory details the creation of an experiment for use in federated machine learning. We use these experiments in conjunction with the fl-server and fl-client services to generate federated-learning experiments in a reusable manner. We use docker volumes to migrate the generated experiment to each of the docker containers. To implement such an intricate system, we follow a specific format, alongside the use of OOP principles like Abstraction to yield a reusable experiment structure.
+# Experiment Structure
+The `experiments/mock-experiment` directory details the creation of an experiment for use in federated machine learning. We use these experiments in conjunction with the fl-server and fl-client services to generate federated-learning experiments in a reusable manner. We use docker volumes to migrate the generated experiment to each of the docker containers. To implement such an intricate system, we follow a specific format, alongside the use of OOP principles like Abstraction to yield a reusable experiment structure.
 
-## Directory Structure
+## Mock-Experiment Structure
 ```bash
 mock-experiment
 |__bases
@@ -19,7 +19,7 @@ mock-experiment
   |__checkpoints
      |  ... (model checkpoints saved)
 ```
-Although the `mock-experiment` folder contains a `bases` subdirectory as well as an `experiment` subdirectory, for each experiment created, the `experiment` folder is the only directory that needs to be recreated as the `bases` directory will be added as a docker volume anyway. This new `experiment` folder can be modeled after the [synthea experiments folder](../synthea-breast-cancer/winter2022/Federated/experiment) (more details in generating an experiment).
+Although the `mock-experiment` folder contains a `bases` subdirectory as well as an `experiment` subdirectory, for each experiment created, the `experiment` folder is the only directory that needs to be recreated as the `bases` directory will be added as a docker volume anyway. This new `experiment` folder can be modeled after the [synthea experiments folder](../experiments/synthea-breast-cancer/winter2022/Federated/experiment) (more details in [generating an experiment](#generating-an-experiment)).
 
 ### Bases Directory
 This directory houses the abstract base classes for the Experiment and FlowerClient types. These abstract base classes are overridden for each experiment to enable custom experiments, while also having a common base by which the client.py and server.py files can call the required functions.
@@ -83,7 +83,7 @@ The fl-server by itself has no extraneous code dedicated to any specific experim
 The fl-client also doesn't have any experiment-specific code. Instead, it also imports modules from the `experiment` folder, which is added as a docker volume. The rigid naming conventions are once again put in place to ensure that the client file works without major revisions from one experiment to the next.
 
 ## Generating an experiment
-To make your own experiment, you have to create an experiment folder like the one in this subdirectory, or like the [synthea experiments folder](../synthea-breast-cancer/winter2022/Federated/experiment). Place this experiment folder inside your own experiment subdirectory within the larger `experiments` root subdirectory (eg. `experiments/my-new-experiment/experiment/`). Ensure that you have at least the 5 files present in the example folder, within your new folder. Don't change the names or parameters of the items that will be imported through the \_\_init\_\_.py file (eg. `experiment`, `model`, `FlowerClient` & `eval_fn`), but feel free to change the names of other items (eg. `MockExperiment`) - Just ensure you have made the changes to the name in all places required. If you have any extra files you want to add to the experiment, create a subdirectory within the `experiment` folder called `helpers`, that houses any such functions. An example of this can be found within the [synthea experiments folder](../synthea-breast-cancer/winter2022/Federated/experiment).
+To make your own experiment, you have to create an experiment folder like the one in this subdirectory, or like the [synthea experiments folder](../experiments/synthea-breast-cancer/winter2022/Federated/experiment). Place this experiment folder inside your own experiment subdirectory within the larger `experiments` root subdirectory (eg. `experiments/my-new-experiment/experiment/`). Ensure that you have at least the 5 files present in the example folder, within your new folder. Don't change the names or parameters of the items that will be imported through the \_\_init\_\_.py file (eg. `experiment`, `model`, `FlowerClient` & `eval_fn`), but feel free to change the names of other items (eg. `MockExperiment`) - Just ensure you have made the changes to the name in all places required. If you have any extra files you want to add to the experiment, create a subdirectory within the `experiment` folder called `helpers`, that houses any such functions. An example of this can be found within the [synthea experiments folder](../experiments/synthea-breast-cancer/winter2022/Federated/experiment).
 
 ## Running an experiment
 

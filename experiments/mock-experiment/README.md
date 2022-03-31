@@ -81,8 +81,7 @@ The fl-client also doesn't have any experiment-specific code. Instead, it also i
 To make your own experiment, you have to create an experiment folder like the one in this subdirectory, or like the [synthea experiments folder](../synthea-breast-cancer/winter2022/Federated/experiment). Place this experiment folder inside your own experiment subdirectory within the larger `experiments` root subdirectory (eg. `experiments/my-new-experiment/experiment/`). Ensure that you have at least the 5 files present in the example folder, within your new folder. Don't change the names or parameters of the items that will be imported through the \_\_init\_\_.py file (eg. `experiment`, `model`, `FlowerClient` & `eval_fn`), but feel free to change the names of other items (eg. `MockExperiment`) - Just ensure you have made the changes to the name in all places required. If you have any extra files you want to add to the experiment, create a subdirectory within the `experiment` folder called `helpers`, that houses any such functions. An example of this can be found within the [synthea experiments folder](../synthea-breast-cancer/winter2022/Federated/experiment).
 
 ## Running an experiment
-
-In order to run the experiment, use the follwing line of code from the root of the federated learning directory:
+In order to run the experiment, use the following line of code from the root of the federated learning directory:
 
 ```bash
 ./experiments/synthea-breast-cancer/winter2022/Federated/quickstart.sh -p <PORT> -n <SITES> -r <ROUNDS> -e <PATH-TO-EXPERIMENTS-DIRECTORY>

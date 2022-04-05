@@ -1,3 +1,6 @@
-[submodule "mohccn-data"]
-	path = mohccn-data
-	url = git@github.com:CanDIG/mohccn-data.git
+[submodule "services/gql-interface"]
+	path = services/gql-interface
+	url = https://github.com/CanDIG/GraphQL-interface
+[submodule "services/katsu"]
+	path = services/katsu
+	url = https://github.com/CanDIG/katsu

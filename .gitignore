@@ -9,3 +9,12 @@
 
 # Ignore OSX Desktop Services Store file
 .DS_Store
+
+# Ignore Table UUID Files
+**/tables.txt
+
+# Ignore Pycache
+**__pycache__
+
+# Ignore Numpy Checkpoints
+**.npz

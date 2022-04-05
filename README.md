@@ -3,6 +3,17 @@ For the development of differentially private federated machine learning on the 
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
 
+<!-- code_chunk_output -->
+
+- [federated-learning](#federated-learning)
+  - [Quick Start](#quick-start)
+  - [Creating a New Federated Learning Experiment](#creating-a-new-federated-learning-experiment)
+    - [Generating an experiment](#generating-an-experiment)
+    - [Running an experiment](#running-an-experiment)
+  - [Development](#development)
+
+<!-- /code_chunk_output -->
+
 ## Quick Start
 
 1. **Pull submodule updates**
@@ -31,7 +42,7 @@ If there are any supplementary functions required, create a `helpers` folder in 
 
 ### Running an experiment
 
-In order to run the experiment, it makes the most sense to create your own `quickstart.sh` script to get the required docker services up in order, with the parameters you need. For example, for the Winter 2022 Synthea federated experiment, use the follwing line of code from the root of the federated learning directory:
+In order to run the experiment, it makes the most sense to create your own `quickstart.sh` script to get the required docker services up in order, with the parameters you need. For example, for the Winter 2022 Synthea federated experiment, use the following line of code from the root of the federated learning directory:
 
 ```bash
 ./experiments/synthea-breast-cancer/winter2022/Federated/quickstart.sh -i <INGEST-PATH> -p <PORT> -n <SITES> -r <ROUNDS> -e <PATH-TO-EXPERIMENTS-DIRECTORY>
@@ -43,16 +54,14 @@ Perform the following to get help for the quickstart script:
 ./experiments/synthea-breast-cancer/winter2022/Federated/quickstart.sh -h
 ```
 
-If none of the options are given, the script uses the following default values:
-- `-i`: Will not ingest data
-- `-p`: Will use port `5000`
-- `-n`: Will generate `2` client sites
-- `-r`: Will run the experiment for `100` rounds
-- `-e`: Will look for an `./experiment` directory
-- `-s`: Will not put all of the data onto one dataset
+If an options is not called, the script uses the following default values:
+- no `-i`: Will not ingest data
+- no `-p`: Will use port `5000`
+- no `-n`: Will generate `2` client sites
+- no `-r`: Will run the experiment for `100` rounds
+- no `-e`: Will look for an `./experiment` directory
+- no `-s`: Will not put all of the data into one dataset
 
 ## Development
 
 To run more existing services alongside Katsu, add the services to the `docker-compose.yml` file (as well as the `configure_docker_compose.py` file) and add their default configuration variables to `.default.env`.
-
-You can also contribute code pertaining to federated learning to this repository. Please organize new files into subdirectories. The root folder should only contain the README, configuration files, and subdirectories.

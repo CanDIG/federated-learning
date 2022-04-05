@@ -7,10 +7,11 @@ For the development of differentially private federated machine learning on the 
 
 - [federated-learning](#federated-learning)
   - [Quick Start](#quick-start)
-  - [Creating a New Federated Learning Experiment](#creating-a-new-federated-learning-experiment)
+  - [Dependencies](#dependencies)
+  - [Running a Federated Learning Experiment](#running-a-federated-learning-experiment)
     - [Generating an experiment](#generating-an-experiment)
     - [Running an experiment](#running-an-experiment)
-  - [Development](#development)
+  - [Contributing](#contributing)
 
 <!-- /code_chunk_output -->
 
@@ -25,7 +26,27 @@ For the development of differentially private federated machine learning on the 
         - Create a `docker-compose` file with [`orchestration-scripts/configure_docker_compose.py`](orchestration-scripts/configure_docker_compose.py).
         - Spin up docker: `docker-compose up -d`
 
-## Creating a New Federated Learning Experiment
+## Dependencies
+
+CanDIGv2 submodules:
+1. [Katsu](https://github.com/CanDIG/katsu/) serves clinical data that the Federated-Learning services may train on and classify
+2. [GraphQL-interface](https://github.com/CanDIG/GraphQL-interface) fetches data from Katsu and serves it to the Federated-Learning services in the Graph Query Language, greatly reducing the amount of preprocessing code required for running an experiment.
+
+Datasets:
+1. Taken from the Synthea/CodeX [synthetic patient mCODE datasets](https://confluence.hl7.org/display/COD/mCODE+Test+Data), the 10yrs breast cancer dataset downloadable [here](http://hdx.mitre.org/downloads/mcode/mcode1_0_10yrs.zip) is used in all of the federated learning experiments included in this repository.
+2. The [MoHCCN-data](https://github.com/CanDIG/mohccn-data) synthetic dataset was used for some early non-federated experiments.
+
+## Running a Federated Learning Experiment
+
+In the future, we would like to provide to the user:
+- an assortment of federated learning experiments that can be run on the data stored in CanDIG's data services, along with
+- an API for selecting the experiment and specifying its configurable parameters.
+
+However, at this stage in development, the federated-learning services expect the user to:
+- provide the source code for the experiment that they want to run, and
+- run the experiment using the docker CLI.
+
+Several example experiments are available in the `experiments/synthea-breast-cancer` subdirectory, or you may provide your own.
 
 ### Generating an experiment
 
@@ -62,6 +83,8 @@ If an options is not called, the script uses the following default values:
 - no `-e`: Will look for an `./experiment` directory
 - no `-s`: Will not put all of the data into one dataset
 
-## Development
+## Contributing
 
-To run more existing services alongside Katsu, add the services to the `docker-compose.yml` file (as well as the `configure_docker_compose.py` file) and add their default configuration variables to `.default.env`.
+Currently, the federated-learning services have only been run on clinical data stored in Katsu. To add more data services, add the services to the `docker-compose.yml` file (as well as the `configure_docker_compose.py` file) and add their default configuration variables to `.default.env`. You may also wish to add ingestion scripts to the `ingestion-scripts` subdirectory.
+
+All experiment-specific source code should go in the `experiments` subdirectory.

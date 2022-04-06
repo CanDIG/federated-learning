@@ -14,7 +14,7 @@ services:
             ROUNDS: "100"
         volumes:
         - ./experiments/mock-experiment/bases:/src/bases
-        - ./experiments/synthea-breast-cancer/winter2022/Federated/experiment/:/src/experiment
+        - ./experiments/synthea-breast-cancer/winter2022/Differentially-Private/experiment/:/src/experiment
     
     db-katsu:
         image: postgres:latest
@@ -70,7 +70,7 @@ services:
             FLOWER_CLIENT_NUMBER: "1"
         volumes:
         - ./experiments/mock-experiment/bases:/src/bases
-        - ./experiments/synthea-breast-cancer/winter2022/Federated/experiment/:/src/experiment
+        - ./experiments/synthea-breast-cancer/winter2022/Differentially-Private/experiment/:/src/experiment
 
     fl-client-2:
         build: services/fl-client
@@ -83,7 +83,7 @@ services:
             FLOWER_CLIENT_NUMBER: "2"
         volumes:
         - ./experiments/mock-experiment/bases:/src/bases
-        - ./experiments/synthea-breast-cancer/winter2022/Federated/experiment/:/src/experiment
+        - ./experiments/synthea-breast-cancer/winter2022/Differentially-Private/experiment/:/src/experiment
 
 volumes:
     db-katsu-data:

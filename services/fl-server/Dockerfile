@@ -10,7 +10,7 @@ LABEL Maintainer="CanDIG Project"
 
 USER root
 
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt -r experiment-requirements.txt
 
 ADD entrypoint.sh /
 

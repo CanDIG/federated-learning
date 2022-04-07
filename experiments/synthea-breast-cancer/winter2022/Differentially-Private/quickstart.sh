@@ -34,7 +34,7 @@ help ()
    echo "   -p <PORT>            Specify Port Number to expose. Defaults to 5000"
    echo "   -n <SITES>           Number of Sites to federate. Defaults to 2"
    echo "   -r <ROUNDS>          Number of rounds of trials to conduct. Defaults to 100."
-   echo "   -e <EXPERIMENT_PATH> Pass in the path to the experiment folder.Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
+   echo "   -e <EXPERIMENT_PATH> Pass in the path to the experiment folder. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
    echo "   -s                   Keep all of the data in one dataset - Useful only if -i specified"
    echo "   -h                   Display this help text"
 }

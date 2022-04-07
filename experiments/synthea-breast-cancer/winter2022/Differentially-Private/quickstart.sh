@@ -24,7 +24,7 @@ help ()
    # Display Help
    echo
    echo "NOTE: OPTIONS MUST PRECEDE ALL ARGUMENTS"
-   echo "Starts an instance of the federated-learning environment with sample data stored locally"
+   echo "Starts an instance of the differentially private federated-learning environment with sample data stored locally"
    echo "Start this program from the root directory of the federated-learning repo"
    echo
    echo "Usage:"

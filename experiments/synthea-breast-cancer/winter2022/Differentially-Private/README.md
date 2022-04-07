@@ -22,10 +22,6 @@ Eg. Let's say the 10yrs directory is in the root federated-learning folder. Then
 This will generate 2 clients and 1 server, alongside ingesting the 10yrs/female data into an instance of Katsu, accessible through the GraphQL-interface generated. This will take quite a long time, up to 35 minutes if ingesting the data as well.
 Use the `-h` flag with the `quickstart.sh` script for further information on the arguments. 
 
-## Further Notes
-
-This is the  differentially private federated implementation of the [Non-Federated Logisitic Regression](../Non-Federated/SyntheaClassifiers.ipynb) Classifier. The full explanation on the choice of classifiers can be found in the [Synthea Breast Cancer Dataset - Federation](Synthea Breast Cancer Dataset - Federation) document. The implementation without the differential privacy can be found in the [Federated folder](../Federated).
-
 When testing or experimenting, the following commands will allow you to restart the experiment with ease (assuming your root repo is called `federated-learning`):
 
 ### Starting the experiment:
@@ -51,3 +47,6 @@ docker rm $(docker ps -a | grep fl- | awk '{print $1;}')
 docker rmi -f $(docker images | grep federated-learning_fl- | awk '{print $3;}')
 ./experiments/synthea-breast-cancer/winter2022/Differentially-Private/quickstart.sh -e ./experiments/synthea-breast-cancer/winter2022/Differentially-Private/experiment
 ```
+## Further Notes
+
+This is the  differentially private federated implementation of the [Non-Federated Logisitic Regression](../Non-Federated/SyntheaClassifiers.ipynb) Classifier. The full explanation on the choice of classifiers can be found in the [Synthea Breast Cancer Dataset - Federation](Synthea Breast Cancer Dataset - Federation) document. The implementation without the differential privacy can be found in the [Federated folder](../Federated).

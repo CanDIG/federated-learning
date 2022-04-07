@@ -7,6 +7,8 @@ FL_MIN_CLIENTS = 2
 FL_RANDOM_STATE = 1729
 FL_TABLE_FILE = f"{os.getcwd()}/experiment/helpers/tables.txt"
 
+FL_EPSILON = 0.85
+
 FL_ROUNDS = int(os.getenv("ROUNDS", "100"))
 FL_CLIENT_NUMBER = os.getenv("FLOWER_CLIENT_NUMBER", "1")
 FL_INTERNAL_PORT = os.getenv("SERVER_INTERNAL_PORT", "8080")

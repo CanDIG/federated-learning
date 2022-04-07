@@ -14,7 +14,7 @@ mock-experiment
   |  get_eval_fn.py
   |  model.py
   |  settings.py
-  |  requirements.txt
+  |  experiment-requirements.txt
   |__helpers
      |  ... (extra files if necessary)
   |__checkpoints
@@ -77,8 +77,8 @@ Defines an instance of the model to federate, with its required parameters.
 #### settings.py
 Defines constants for use in the fl-* services.
 
-#### requirements.txt
-Defines additional python modules that are required, beyond the ones present in the fl-server's and the fl-client's requirements.txt files. It is recommended that you specify each required module in the form `[module]==[version]` to ensure that your experiment will work in the future. The fl-server and fl-client base requirements are not labeled as such because we wish for them to update continually. This file is essential since the Dockerfile won't complete without this file. If you have no additional dependencies, leave the `requirements.txt` file empty.
+#### experiment-requirements.txt
+Defines additional python modules that are required, beyond the ones present in the fl-server's and the fl-client's experiment-requirements.txt files. It is recommended that you specify each required module in the form `[module]==[version]` to ensure that your experiment will work in the future. The fl-server and fl-client base requirements are not labeled as such because we wish for them to update continually. This file is essential since the Dockerfile won't complete without this file. If you have no additional dependencies, leave the `experiment-requirements.txt` file empty.
 
 ## fl-server
 The fl-server by itself has no extraneous code dedicated to any specific experiment. Instead, using the quickstart script, docker volumes are added to ensure that the `bases` and an `experiment` folder are added to the container. To ensure compatibility with all experiments, the `server.py` file imports the `experiment`, `model` & `eval_fn` values from the `experiment` folder. Given what was talked about above, we know that these values will change depending upon the specific experiment at hand. This is why the structure and naming of the functions must remain consistent.

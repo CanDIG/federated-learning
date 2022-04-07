@@ -20,4 +20,4 @@
 **.npz
 
 # Ignore Experiment-Specific Requirements
-**/experiment-requirements.txt
+**/services/**/experiment-requirements.txt

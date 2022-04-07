@@ -10,3 +10,4 @@ In addition to the documentation present within the folders of each experimental
 - [Ali & Laiba EDA - Inputs & Outputs](https://candig.atlassian.net/wiki/spaces/CA/pages/624427043/Synthea+Breast+Cancer+Dataset+-+Inputs+and+Outputs)
 - [Ali & Laiba EDA - Classifier Training](https://candig.atlassian.net/wiki/spaces/CA/pages/624623655/Synthea+Breast+Cancer+Dataset+-+Classifier+Training)
 - [Ali & Laiba EDA - Federation](https://candig.atlassian.net/wiki/spaces/CA/pages/632389635/Synthea+Breast+Cancer+Dataset+-+Federation)
+- [Ali & Laiba EDA - Differentially Private Federation](https://candig.atlassian.net/wiki/spaces/~606c79f3edc14f00768afea5/pages/634028033/Choice+of+Differential+Privacy+Algorithm)

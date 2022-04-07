@@ -5,6 +5,8 @@ As in the fall 2021 folder, this experiment uses a docker-compose file generated
 
 This experiment makes use of the `diffprivlib` module, an [IBM project](https://github.com/IBM/differential-privacy-library), to implement differentially private federated-learning, as discussed in this [confluence document](https://candig.atlassian.net/wiki/spaces/CA/pages/634224664/Synthea+Breast+Cancer+-+Choice+of+Differential+Privacy+Algorithm). For differentially-private Logistic Regression, the `diffprivlib` module makes use of the "[*`Vector`*](https://github.com/IBM/differential-privacy-library/blob/main/diffprivlib/models/logistic_regression.py) mechanism, which adds a Laplace-distributed random vector to the objective". This differential privacy library acts on the fl-client level, adding noise whenever a model is going to be fitted. The federation library is still the same, flower, and it implements federation through the `Federated Averaging` Algorithm. Although end-to-end differentially-private algorithms, like Nikolaos Tatarakis' proposed algorithm in his thesis titled "Differentially Private Federated Learning" were considered, as noted in the aforementioned Confluence document, those models were disregarded because of the time needed to implement them.
 
+The epsilon was modified to be 0.85, the default is 1.0 for `diffprivlib` models, but this is not sufficiently private. 
+
 ## How to Run
 
 First, make sure that all submodules have been recursively updated by running

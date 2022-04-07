@@ -3,6 +3,8 @@ The team at [The MITRE Corporation](https://mitre.org) have created a population
 
 We are using the `Approx. 2,000 Patient Records with 10 Years of Medical History` breast cancer dataset, downloadable [here](http://hdx.mitre.org/downloads/mcode/mcode1_0_10yrs.zip). This synthetic dataset mostly contains patients with breast cancer, though some other cancers are also present. We have created multiple experimental setups to use this data to create and train models for use in federated, and non-federated contexts.
 
+We made extensive use of Docker Volumes in this experiment so that if we needed to modify any parameters, we wouldn't need to rebuild the docker image & container, and instead could simply restart the container. It is encouraged to make use of docker volumes (bind mounts) for this experiment.
+
 ## External Resources
 In addition to the documentation present within the folders of each experimental setup, the following external resources also contain useful documentation for this experiment.
 

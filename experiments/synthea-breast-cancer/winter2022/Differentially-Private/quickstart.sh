@@ -24,7 +24,7 @@ help ()
    # Display Help
    echo
    echo "NOTE: OPTIONS MUST PRECEDE ALL ARGUMENTS"
-   echo "Starts an instance of the federated-learning environment with sample data stored locally"
+   echo "Starts an instance of the differentially-private federated-learning environment with sample data stored locally"
    echo "Start this program from the root directory of the federated-learning repo"
    echo
    echo "Usage:"
@@ -34,7 +34,7 @@ help ()
    echo "   -p <PORT>            Specify Port Number to expose. Defaults to 5000"
    echo "   -n <SITES>           Number of Sites to federate. Defaults to 2"
    echo "   -r <ROUNDS>          Number of rounds of trials to conduct. Defaults to 100."
-   echo "   -e <EXPERIMENT_PATH> Pass in the path to the experiment folder. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
+   echo "   -e <EXPERIMENT_PATH> Pass in the path to the experiment folder.Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
    echo "   -s                   Keep all of the data in one dataset - Useful only if -i specified"
    echo "   -h                   Display this help text"
 }
@@ -192,7 +192,7 @@ echo "Sleeping for $SLEEP_TIME seconds to let Docker containers complete initial
 
 sleep ${SLEEP_TIME}
 
-TABLE_PATH="${PWD}/experiments/synthea-breast-cancer/winter2022/Federated/experiment/helpers/"
+TABLE_PATH="${PWD}/experiments/synthea-breast-cancer/winter2022/Differentially-Private/experiment/helpers/"
 
 # Ingest Data, if necessary
 if [[ ${TO_INGEST} -eq 1 ]]; then

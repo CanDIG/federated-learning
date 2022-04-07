@@ -10,4 +10,33 @@ In addition to the documentation present within the folders of each experimental
 - [Ali & Laiba EDA - Inputs & Outputs](https://candig.atlassian.net/wiki/spaces/CA/pages/624427043/Synthea+Breast+Cancer+Dataset+-+Inputs+and+Outputs)
 - [Ali & Laiba EDA - Classifier Training](https://candig.atlassian.net/wiki/spaces/CA/pages/624623655/Synthea+Breast+Cancer+Dataset+-+Classifier+Training)
 - [Ali & Laiba EDA - Federation](https://candig.atlassian.net/wiki/spaces/CA/pages/632389635/Synthea+Breast+Cancer+Dataset+-+Federation)
-- [Ali & Laiba EDA - Differentially Private Federation](https://candig.atlassian.net/wiki/spaces/~606c79f3edc14f00768afea5/pages/634028033/Choice+of+Differential+Privacy+Algorithm)
+- [Ali & Laiba EDA - Differentially Private Federation](https://candig.atlassian.net/wiki/spaces/CA/pages/634224664/Synthea+Breast+Cancer+-+Choice+of+Differential+Privacy+Algorithm)
+
+## Useful Commands
+
+When testing or experimenting, the following commands will allow you to restart the experiment with ease (assuming your root repo is called `federated-learning`):
+
+### Starting the experiment:
+- `./experiments/synthea-breast-cancer/winter2022/{{EXPERIMENT_TYPE_FOLDER}}/quickstart.sh [OPTIONS]`
+- `EXPERIMENT_TYPE_FOLDER` can be either `Federated` or `Differentially-Private`
+
+### Deleting All fl-server/fl-client Docker Containers
+- `docker rm $(docker ps -a | grep fl- | awk '{print $1;}')`
+
+### Deleting All fl-server/fl-client Docker Images
+- `docker rmi -f $(docker images | grep federated-learning_fl- | awk '{print $3;}')`
+
+### Example
+- Run experiment with ingest
+```bash
+./experiments/synthea-breast-cancer/winter2022/{{EXPERIMENT_TYPE_FOLDER}}/quickstart.sh -i 10yrs/female -e ./experiments/synthea-breast-cancer/winter2022/{{EXPERIMENT_TYPE_FOLDER}}/experiment
+```
+
+- See results, make changes, etc.
+
+- Restart experiment (without ingestion)
+```bash
+docker rm $(docker ps -a | grep fl- | awk '{print $1;}')
+docker rmi -f $(docker images | grep federated-learning_fl- | awk '{print $3;}')
+./experiments/synthea-breast-cancer/winter2022/{{EXPERIMENT_TYPE_FOLDER}}/quickstart.sh -e ./experiments/synthea-breast-cancer/winter2022/{{EXPERIMENT_TYPE_FOLDER}}/experiment
+```

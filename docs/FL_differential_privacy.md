@@ -14,4 +14,4 @@ There are three aspects to consider when implementing a differentially private a
 ## Algorithm Implemented
 A diffprivlib implementation would apply differential privacy at the fl-client level. This would have the effect of minimzing the impact that any particular data point would have on the analysis of the dataset as a whole. 
 
-The [confluence document](https://candig.atlassian.net/wiki/spaces/~606c79f3edc14f00768afea5/pages/634028033/Choice+of+Differential+Privacy+Algorithm) associated with this story delves deeper into the decsion.
+The [confluence document](https://candig.atlassian.net/wiki/spaces/CA/pages/634224664/Synthea+Breast+Cancer+-+Choice+of+Differential+Privacy+Algorithm) associated with this story delves deeper into the decsion.

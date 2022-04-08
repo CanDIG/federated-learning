@@ -30,13 +30,14 @@ help ()
    echo "Usage:"
    echo "   ./quickstart.sh [options]"
    echo "Options:"
-   echo "   -i <INGEST_PATH>     Ingest Data present at Path into Katsu"
-   echo "   -p <PORT>            Specify Port Number to expose. Defaults to 5000"
-   echo "   -n <SITES>           Number of Sites to federate. Defaults to 2"
-   echo "   -r <ROUNDS>          Number of rounds of trials to conduct. Defaults to 100."
-   echo "   -e <EXPERIMENT_PATH> Pass in the path to the experiment folder. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
-   echo "   -s                   Keep all of the data in one dataset - Useful only if -i specified"
-   echo "   -h                   Display this help text"
+   echo "   -i <INGEST_PATH>               Ingest Data present at Path into Katsu"
+   echo "   -p <PORT>                      Specify Port Number to expose. Defaults to 5000"
+   echo "   -n <SITES>                     Number of Sites to federate. Defaults to 2"
+   echo "   -r <ROUNDS>                    Number of rounds of trials to conduct. Defaults to 100."
+   echo "   -e <EXPERIMENT_PATH>           Pass in the path to the experiment folder. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
+   echo "   -f <FEDERATED_EXPERIMENT_PATH> Pass in the path to the experiment folder of the federated trial. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
+   echo "   -s                             Keep all of the data in one dataset - Useful only if -i specified"
+   echo "   -h                             Display this help text"
 }
 
 ################################################################################
@@ -138,7 +139,7 @@ check_value()
 ################################################################################
 
 # Read in the script options
-while getopts ":i:p:n:r:e:sh" opt; do
+while getopts ":i:p:n:r:e:f:sh" opt; do
   case $opt in
     i)  SYNTHEA_PATH=$(check_path ${OPTARG})
         TO_INGEST=1
@@ -150,6 +151,8 @@ while getopts ":i:p:n:r:e:sh" opt; do
     r)  ROUNDS=$(check_rounds ${OPTARG})
         ;;
     e)  EXPERIMENT_PATH=$(check_path ${OPTARG})
+        ;;
+    f)  FEDERATED_EXPERIMENT_PATH=$(check_path ${OPTARG})
         ;;
     s)  SAME_DATA=1
         ;;
@@ -171,6 +174,7 @@ NUM_SITES=$(check_value ${NUM_SITES} 2)
 TO_INGEST=$(check_value ${TO_INGEST} 0)
 ROUNDS=$(check_value ${ROUNDS} 100)
 EXPERIMENT_PATH=$(check_path $(check_value ${EXPERIMENT_PATH} ./experiment))
+FEDERATED_EXPERIMENT_PATH=$(check_path $(check_value ${FEDERATED_EXPERIMENT_PATH} ./experiment))
 
 # Display Arguments
 echo "The following values have been selected:"
@@ -179,10 +183,15 @@ echo "      NUMBER OF SITES: ${NUM_SITES}"
 echo "      BASE PORT: ${BASE_PORT}"
 echo "      NUMBER OF ROUNDS: ${ROUNDS}"
 echo "      EXPERIMENT PATH: ${EXPERIMENT_PATH}"
+echo "      FEDERATED EXPERIMENT PATH: ${FEDERATED_EXPERIMENT_PATH}"
 
 # Create Docker-Compose File
 echo
 $PWD/orchestration-scripts/configure_docker_compose.py ${BASE_PORT} ${NUM_SITES} ${ROUNDS} ${EXPERIMENT_PATH}
+
+# Modify Docker-Compose File to remove experiment folder bind mount
+echo
+$PWD/orchestration-scripts/remove_bind_mounts.py -e
 
 # Start Katsu & GraphQL-interface
 echo
@@ -192,7 +201,7 @@ echo "Sleeping for $SLEEP_TIME seconds to let Docker containers complete initial
 
 sleep ${SLEEP_TIME}
 
-TABLE_PATH="${PWD}/experiments/synthea-breast-cancer/winter2022/Differentially-Private/experiment/helpers/"
+TABLE_PATH="${EXPERIMENT_PATH}helpers/"
 
 # Ingest Data, if necessary
 if [[ ${TO_INGEST} -eq 1 ]]; then
@@ -249,6 +258,35 @@ if [[ ${TO_INGEST} -eq 1 ]]; then
 
     sleep ${SLEEP_TIME}
 fi
+
+# Add Experiment to Containers
+echo
+docker-compose up -d
+
+## Kill All Running FL-* containers
+all_containers="$(docker ps -a | grep fl- | awk '{print $1;}')"
+docker kill ${all_containers} 1>/dev/null
+
+## Create Temp Directory
+temp_folder="$(mktemp -d)"
+
+## Transfer Files from Federated Experiment to Temp Folder
+for file in ${FEDERATED_EXPERIMENT_PATH}*; do
+    cp -r "${file}" "${temp_folder}"
+done
+
+## Transfer Files from Diff-Priv Experiment to Temp Folder
+for file in ${EXPERIMENT_PATH}*; do
+    cp -r "${file}" "${temp_folder}"
+done
+
+## Transfer Temp Folder to all fl-* Containers
+for container in ${all_containers}; do
+    docker cp "${temp_folder}" "${container}:/src/experiment"
+done
+
+## Delete Temp Folder
+rm -rf "${temp_folder}"
 
 # Start all services
 echo

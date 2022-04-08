@@ -4,7 +4,7 @@ import argparse
 import os
 import shutil
 
-BASES_PATH = "./experiments/mock-experiment/bases"
+BASES_PATH = "./experiments/mock-experiment/bases/"
 
 def print_ports(initial_port: int) -> None:
     """

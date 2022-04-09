@@ -4,6 +4,7 @@ FL_N_CLASSES = 4
 FL_N_FEATURES = 7
 FL_EPOCHS = 10000
 FL_SOLVER = 'saga'
+FL_CLASS_WEIGHT = 'balanced'
 FL_MIN_CLIENTS = 2
 FL_RANDOM_STATE = 1729
 FL_TABLE_FILE = f"{os.getcwd()}/experiment/helpers/tables.txt"

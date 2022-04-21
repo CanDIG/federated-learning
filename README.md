@@ -83,6 +83,18 @@ If an options is not called, the script uses the following default values:
 - no `-e`: Will look for an `./experiment` directory
 - no `-s`: Will not put all of the data into one dataset
 
+## Technical debt
+
+To prepare the federated-learning services for deployment, there should be a set of models (or a carefully-parametrized model-building pipeline) prepared and packaged into the docker containers. An API should be provided for selecting and running these models. This API should then be connected to Tyk.
+
+Additionally, improvements should be made to the [GraphQL-interface](https://github.com/CanDIG/GraphQL-interface) that the federated-learning services depend on for data. The data services (Katsu and the variants service) should ideally expose their own GraphQL APIs, eliminating the need for a GraphQL-interface. Alternately, improvements in training speed could be achieved by refactoring the existing GraphQL-interface proof-of-concept to use concurrency, although this is not an optimal long-term solution.
+
+The Flower framework for federated learning used by this repository will soon support communications over secure gRPC; this repository and/or its deployment should be upgraded accordingly.
+
+### Improving differential privacy
+
+Suggestions for implementing a more thorough differential privacy setup are provided in `docs/FL_differential_privacy.md`.
+
 ## Contributing
 
 Currently, the federated-learning services have only been run on clinical data stored in Katsu. To add more data services, add the services to the `docker-compose.yml` file (as well as the `configure_docker_compose.py` file) and add their default configuration variables to `.default.env`. You may also wish to add ingestion scripts to the `ingestion-scripts` subdirectory.

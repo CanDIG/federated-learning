@@ -100,3 +100,5 @@ Suggestions for implementing a more thorough differential privacy setup are prov
 Currently, the federated-learning services have only been run on clinical data stored in Katsu. To add more data services, add the services to the `docker-compose.yml` file (as well as the `configure_docker_compose.py` file) and add their default configuration variables to `.default.env`. You may also wish to add ingestion scripts to the `ingestion-scripts` subdirectory.
 
 All experiment-specific source code should go in the `experiments` subdirectory.
+
+To run experiments on a different dataset, see the `experiments/mock-experiment/template-quickstarts` directory for template quickstart files for both `federated` and `differentially-private federated` experiments. These templates are not mandatory to use, if they are not convenient you may ignore or even remove them.

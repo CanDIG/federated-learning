@@ -2,8 +2,9 @@
 
 import argparse
 import os
+import shutil
 
-BASES_PATH = "./experiments/mock-experiment/bases"
+BASES_PATH = "./experiments/mock-experiment/bases/"
 
 def print_ports(initial_port: int) -> None:
     """
@@ -141,6 +142,14 @@ def save_file_here(contents: str, name: str) -> None:
     file.write(contents)
     print(f"Docker-Compose File saved at {os.getcwd()}/{name}!")
 
+def copy_experiment_requirements(experiment_path: str):
+    """
+    Function to copy the experiment requirements from the experiment folder to services/fl-* folders since the Dockerfile cannot access files within docker volumes 
+    """
+    
+    shutil.copy(f'{experiment_path}experiment-requirements.txt', f'{os.getcwd()}/services/fl-server/experiment-requirements.txt')
+    shutil.copy(f'{experiment_path}experiment-requirements.txt', f'{os.getcwd()}/services/fl-client/experiment-requirements.txt')
+
 def main() -> None:
     """
     Function to configure and save a docker-compose file, given command-line arguments for the starting port as well as the number of clients requested
@@ -169,6 +178,7 @@ def main() -> None:
 
     docker_compose_string = create_docker_compose_string(starting_port, scale, rounds, experiment_path)
     save_file_here(docker_compose_string, "docker-compose.yml")
+    copy_experiment_requirements(experiment_path)
 
 if __name__ == "__main__":
     main()

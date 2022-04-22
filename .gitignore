@@ -18,3 +18,6 @@
 
 # Ignore Numpy Checkpoints
 **.npz
+
+# Ignore Experiment-Specific Requirements
+**/services/**/experiment-requirements.txt

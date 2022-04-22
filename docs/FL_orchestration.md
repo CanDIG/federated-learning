@@ -5,6 +5,7 @@ The federated-learning setup is very dependent on the docker configuration creat
 ```bash
 orchestration-scripts
 |  configure_docker_compose.py
+|  remove_bind_mounts.py
 |  additional-scripts-here (add any new orchestration scripts here)
 ```
 ## Scripts
@@ -24,3 +25,17 @@ EXPERIMENT_PATH := The path of the 'experiment' folder
 ```
 
 Additional help is visible using `./orchestration-scripts/configure_docker_compose.py -h`
+
+### remove_bind_mounts.py
+The script modifies an existing docker-compose file by removing its bind mounts, which are specified by optional arguments. This is useful for modifying experiments without having the changes show up in the container. To call it from the root federated-learning directory, use to following form:
+```bash
+./orchestration-scripts/remove_bind_mounts.py [OPTIONS]
+```
+
+Options:
+```
+-e := Remove the experiment folder bind mount
+-b := Remove the bases folder bind mount
+-k := Remove the katsu_entrypoint.sh script bind mount
+-i := Remove the katsu ingestion scripts bind mount
+```

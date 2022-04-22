@@ -193,6 +193,7 @@ echo "Sleeping for $SLEEP_TIME seconds to let Docker containers complete initial
 sleep ${SLEEP_TIME}
 
 TABLE_PATH="${PWD}/experiments/synthea-breast-cancer/winter2022/Federated/experiment/helpers/"
+mkdir -p ${TABLE_PATH}
 
 # Ingest Data, if necessary
 if [[ ${TO_INGEST} -eq 1 ]]; then

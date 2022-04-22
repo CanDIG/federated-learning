@@ -3,17 +3,17 @@ The federated-learning repository is large and complex, and hence must be split 
 
 
 ## Experiments Documentation
-- [`FL_experiments.md`](FL_experiments.md)
-- [`FL_experiments_structure.md`](FL_experiments_structure.md)
+- [`FL_experiments.md`](FL_experiments.md): Documents the `experiments` subdirectory and details the process for generating a new experiment.
+- [`FL_experiments_structure.md`](FL_experiments_structure.md): Documents the `experiments/mock-experiment` subdirectory.
 
 ## Ingestion Documentation
-- [`FL_ingestion.md`](FL_ingestion.md)
+- [`FL_ingestion.md`](FL_ingestion.md): Documents the `ingestion-scripts` subdirectory and details the data ingestion process.
 
 ## Orchestration Documentation
-- [`FL_orchestration.md`](FL_orchestration.md)
+- [`FL_orchestration.md`](FL_orchestration.md): Documents the `orchestration-scripts` subdirectory.
 
 ## Services Documentation
-- [`FL_services.md`](FL_services.md)
+- [`FL_services.md`](FL_services.md): Documents the `services` subdirectory and details the purpose of each subfolder within the subdirectory.
 
 ## Federated and Non-Federated Experiment Examples
 ### Synthea Breast Cancer

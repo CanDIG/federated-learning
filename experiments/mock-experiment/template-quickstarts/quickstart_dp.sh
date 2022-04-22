@@ -6,10 +6,9 @@
 # Constants                                                                    #
 ################################################################################
 SLEEP_TIME=40
-PROJECT_NAME="synthea-project"
-DATASET_NAME="synthea-dataset"
-TABLE_NAME="synthea-table"
-
+PROJECT_NAME="experiment-project"	
+DATASET_NAME="experiment-dataset"	
+TABLE_NAME="experiment-table"
 # Script Kill Constants
 export TOP_PID=$$
 trap "exit 1" TERM
@@ -59,24 +58,24 @@ error ()
 # Check to see if the ingestion path is valid
 check_path()
 {
-    SYNTHEA_PATH=${1}
+    DATASET_PATH=${1}
     
-    if [[ ${SYNTHEA_PATH} =~ ^-.* ]]; then
-        error "The path '${SYNTHEA_PATH}' cannot be an option"
+    if [[ ${DATASET_PATH} =~ ^-.* ]]; then
+        error "The path '${DATASET_PATH}' cannot be an option"
     fi
 
-    ls ${SYNTHEA_PATH} 2>/dev/null 1>/dev/null  
-    SYNTHEA_PATH_CODE=$?
+    ls ${DATASET_PATH} 2>/dev/null 1>/dev/null  
+    DATASET_PATH_CODE=$?
 
-    if [[ ${SYNTHEA_PATH_CODE} -ne 0 ]]; then
-        error "There was an error in finding the path '${SYNTHEA_PATH}': Error Code ${SYNTHEA_PATH_CODE}"
+    if [[ ${DATASET_PATH_CODE} -ne 0 ]]; then
+        error "There was an error in finding the path '${DATASET_PATH}': Error Code ${DATASET_PATH_CODE}"
     fi
 
-    if ! [[ ${SYNTHEA_PATH} =~ .*/$ ]]; then
-        SYNTHEA_PATH="${SYNTHEA_PATH}/"
+    if ! [[ ${DATASET_PATH} =~ .*/$ ]]; then
+        DATASET_PATH="${DATASET_PATH}/"
     fi
 
-    echo ${SYNTHEA_PATH}
+    echo ${DATASET_PATH}
 }
 
 # Check to see if number entered is positive integer
@@ -142,7 +141,7 @@ check_value()
 # Read in the script options
 while getopts ":i:p:n:r:e:f:sh" opt; do
   case $opt in
-    i)  SYNTHEA_PATH=$(check_path ${OPTARG})
+    i)  DATASET_PATH=$(check_path ${OPTARG})
         TO_INGEST=1
         ;;
     p)  BASE_PORT=$(check_port ${OPTARG})
@@ -168,7 +167,7 @@ done
 shift "$((OPTIND - 1))"
 
 # Get Argument Values & Set Defaults
-SYNTHEA_PATH=$(check_value ${SYNTHEA_PATH} "NOT INGESTING DATA")
+DATASET_PATH=$(check_value ${DATASET_PATH} "NOT INGESTING DATA")
 SAME_DATA=$(check_value ${SAME_DATA} 0)
 BASE_PORT=$(check_value ${BASE_PORT} 5000)
 NUM_SITES=$(check_value ${NUM_SITES} 2)
@@ -179,7 +178,7 @@ ORIGINAL_EXPERIMENT_PATH=$(check_path $(check_value ${ORIGINAL_EXPERIMENT_PATH} 
 
 # Display Arguments
 echo "The following values have been selected:"
-echo "      INGESTION PATH: ${SYNTHEA_PATH}"
+echo "      INGESTION PATH: ${DATASET_PATH}"
 echo "      NUMBER OF SITES: ${NUM_SITES}"
 echo "      BASE PORT: ${BASE_PORT}"
 echo "      NUMBER OF ROUNDS: ${ROUNDS}"
@@ -215,13 +214,13 @@ if [[ ${TO_INGEST} -eq 1 ]]; then
     # Ingest Data into one Table
     if [[ ${SAME_DATA} -eq 1 ]]; then
         echo
-        ingestion=$(bash $PWD/ingestion-scripts/init.sh -l -d ${SYNTHEA_PATH} ${PROJECT_NAME} ${DATASET_NAME} ${TABLE_NAME} mcodepacket | tee /dev/tty)
+        ingestion=$(bash $PWD/ingestion-scripts/init.sh -l -d ${DATASET_PATH} ${PROJECT_NAME} ${DATASET_NAME} ${TABLE_NAME} mcodepacket | tee /dev/tty)
 
         echo "$ingestion" | grep "TABLE_UUID" >> "${TABLE_PATH}tables.txt"
     else
         # Ingest Data into multiple Tables
         SITE_DIRS=()
-        DATA_LEN=$(($(ls -l ${SYNTHEA_PATH} | wc -l) - 1))
+        DATA_LEN=$(($(ls -l ${DATASET_PATH} | wc -l) - 1))
 
         # Copy Data into temporary folders
         if [[ ${DATA_LEN} -ge ${NUM_SITES} ]]; then
@@ -230,7 +229,7 @@ if [[ ${TO_INGEST} -eq 1 ]]; then
             done
 
             COUNTER=0
-            for i in ${SYNTHEA_PATH}*; do
+            for i in ${DATASET_PATH}*; do
                 cp "${i}" "${SITE_DIRS[COUNTER]}"
                 COUNTER=$((${COUNTER} + 1))
 

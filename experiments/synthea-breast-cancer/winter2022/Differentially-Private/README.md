@@ -9,6 +9,8 @@ The epsilon was modified to be 0.85, the default is 1.0 for `diffprivlib` models
 
 ## How to Run
 
+Given the similarities to the Non-Differentially Private Federated Experiment, we used the `experiment` folder from that experiment as the base for this experiment. This results in a reduction of repeated code, but comes with the drawback of not being able to use docker volumes and so for this experiment, we must rebuild the container for each new trial we wish to perform. We must specify the path to the federated `experiment` folder, with the `-f` flag, when calling the script, so that the script can add its files to the docker containers.
+
 First, make sure that all submodules have been recursively updated by running
 ```
 git submodule update --init --recursive
@@ -17,8 +19,8 @@ git submodule update --init --recursive
 You can run the experimental setup by ensuring you have a copy of the 10yrs Synthea mCODE data installed on your machine, and then using the quickstart script to set up instances of the services needed.
 Eg. Let's say the 10yrs directory is in the root federated-learning folder. Then from the root federated-learning folder, perform:
 
-```
-./experiments/synthea-breast-cancer/winter2022/Differentially-Private/quickstart.sh -i 10yrs/female
+```bash
+./experiments/synthea-breast-cancer/winter2022/Differentially-Private/quickstart.sh -i 10yrs/female -e <DP_EXPERIMENT_PATH> -f <ORIGINAL_EXPERIMENT_PATH>
 ```
 
 This will generate 2 clients and 1 server, alongside ingesting the 10yrs/female data into an instance of Katsu, accessible through the GraphQL-interface generated. This will take quite a long time, up to 35 minutes if ingesting the data as well.

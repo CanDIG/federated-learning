@@ -6,9 +6,9 @@
 # Constants                                                                    #
 ################################################################################
 SLEEP_TIME=40
-PROJECT_NAME="synthea-project"
-DATASET_NAME="synthea-dataset"
-TABLE_NAME="synthea-table"
+PROJECT_NAME="experiment-project"
+DATASET_NAME="experiment-dataset"
+TABLE_NAME="experiment-table"
 
 # Script Kill Constants
 export TOP_PID=$$
@@ -24,21 +24,19 @@ help ()
    # Display Help
    echo
    echo "NOTE: OPTIONS MUST PRECEDE ALL ARGUMENTS"
-   echo "NOTE: This script will create and then kill the fl-* containers, and will start them once more before exiting. This is done to add the proper experiment files to the container without needing to duplicate code between the original and dp experiment folders."
-   echo "Starts an instance of the differentially-private federated-learning environment with sample data stored locally"
+   echo "Starts an instance of the federated-learning environment with sample data stored locally"
    echo "Start this program from the root directory of the federated-learning repo"
    echo
    echo "Usage:"
    echo "   ./quickstart.sh [options]"
    echo "Options:"
-   echo "   -i <INGEST_PATH>               Ingest Data present at Path into Katsu"
-   echo "   -p <PORT>                      Specify Port Number to expose. Defaults to 5000"
-   echo "   -n <SITES>                     Number of Sites to federate. Defaults to 2"
-   echo "   -r <ROUNDS>                    Number of rounds of trials to conduct. Defaults to 100."
-   echo "   -e <DP_EXPERIMENT_PATH>        Pass in the path to the differentially-private experiment folder. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
-   echo "   -f <ORIGINAL_EXPERIMENT_PATH>  Pass in the path to the original non-differentially-private experiment folder of the federated trial. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
-   echo "   -s                             Keep all of the data in one dataset - Useful only if -i specified"
-   echo "   -h                             Display this help text"
+   echo "   -i <INGEST_PATH>     Ingest Data present at Path into Katsu"
+   echo "   -p <PORT>            Specify Port Number to expose. Defaults to 5000"
+   echo "   -n <SITES>           Number of Sites to federate. Defaults to 2"
+   echo "   -r <ROUNDS>          Number of rounds of trials to conduct. Defaults to 100."
+   echo "   -e <EXPERIMENT_PATH> Pass in the path to the experiment folder. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
+   echo "   -s                   Keep all of the data in one dataset - Useful only if -i specified"
+   echo "   -h                   Display this help text"
 }
 
 ################################################################################
@@ -59,24 +57,24 @@ error ()
 # Check to see if the ingestion path is valid
 check_path()
 {
-    SYNTHEA_PATH=${1}
+    DATASET_PATH=${1}
     
-    if [[ ${SYNTHEA_PATH} =~ ^-.* ]]; then
-        error "The path '${SYNTHEA_PATH}' cannot be an option"
+    if [[ ${DATASET_PATH} =~ ^-.* ]]; then
+        error "The path '${DATASET_PATH}' cannot be an option"
     fi
 
-    ls ${SYNTHEA_PATH} 2>/dev/null 1>/dev/null  
-    SYNTHEA_PATH_CODE=$?
+    ls ${DATASET_PATH} 2>/dev/null 1>/dev/null  
+    DATASET_PATH_CODE=$?
 
-    if [[ ${SYNTHEA_PATH_CODE} -ne 0 ]]; then
-        error "There was an error in finding the path '${SYNTHEA_PATH}': Error Code ${SYNTHEA_PATH_CODE}"
+    if [[ ${DATASET_PATH_CODE} -ne 0 ]]; then
+        error "There was an error in finding the path '${DATASET_PATH}': Error Code ${DATASET_PATH_CODE}"
     fi
 
-    if ! [[ ${SYNTHEA_PATH} =~ .*/$ ]]; then
-        SYNTHEA_PATH="${SYNTHEA_PATH}/"
+    if ! [[ ${DATASET_PATH} =~ .*/$ ]]; then
+        DATASET_PATH="${DATASET_PATH}/"
     fi
 
-    echo ${SYNTHEA_PATH}
+    echo ${DATASET_PATH}
 }
 
 # Check to see if number entered is positive integer
@@ -140,9 +138,9 @@ check_value()
 ################################################################################
 
 # Read in the script options
-while getopts ":i:p:n:r:e:f:sh" opt; do
+while getopts ":i:p:n:r:e:sh" opt; do
   case $opt in
-    i)  SYNTHEA_PATH=$(check_path ${OPTARG})
+    i)  DATASET_PATH=$(check_path ${OPTARG})
         TO_INGEST=1
         ;;
     p)  BASE_PORT=$(check_port ${OPTARG})
@@ -151,9 +149,7 @@ while getopts ":i:p:n:r:e:f:sh" opt; do
         ;;
     r)  ROUNDS=$(check_rounds ${OPTARG})
         ;;
-    e)  DP_EXPERIMENT_PATH=$(check_path ${OPTARG})
-        ;;
-    f)  ORIGINAL_EXPERIMENT_PATH=$(check_path ${OPTARG})
+    e)  EXPERIMENT_PATH=$(check_path ${OPTARG})
         ;;
     s)  SAME_DATA=1
         ;;
@@ -168,31 +164,25 @@ done
 shift "$((OPTIND - 1))"
 
 # Get Argument Values & Set Defaults
-SYNTHEA_PATH=$(check_value ${SYNTHEA_PATH} "NOT INGESTING DATA")
+DATASET_PATH=$(check_value ${DATASET_PATH} "NOT INGESTING DATA")
 SAME_DATA=$(check_value ${SAME_DATA} 0)
 BASE_PORT=$(check_value ${BASE_PORT} 5000)
 NUM_SITES=$(check_value ${NUM_SITES} 2)
 TO_INGEST=$(check_value ${TO_INGEST} 0)
 ROUNDS=$(check_value ${ROUNDS} 100)
-DP_EXPERIMENT_PATH=$(check_path $(check_value ${DP_EXPERIMENT_PATH} ./experiment))
-ORIGINAL_EXPERIMENT_PATH=$(check_path $(check_value ${ORIGINAL_EXPERIMENT_PATH} ./experiment))
+EXPERIMENT_PATH=$(check_path $(check_value ${EXPERIMENT_PATH} ./experiment))
 
 # Display Arguments
 echo "The following values have been selected:"
-echo "      INGESTION PATH: ${SYNTHEA_PATH}"
+echo "      INGESTION PATH: ${DATASET_PATH}"
 echo "      NUMBER OF SITES: ${NUM_SITES}"
 echo "      BASE PORT: ${BASE_PORT}"
 echo "      NUMBER OF ROUNDS: ${ROUNDS}"
-echo "      EXPERIMENT PATH: ${DP_EXPERIMENT_PATH}"
-echo "      FEDERATED EXPERIMENT PATH: ${ORIGINAL_EXPERIMENT_PATH}"
+echo "      EXPERIMENT PATH: ${EXPERIMENT_PATH}"
 
 # Create Docker-Compose File
 echo
-$PWD/orchestration-scripts/configure_docker_compose.py ${BASE_PORT} ${NUM_SITES} ${ROUNDS} ${DP_EXPERIMENT_PATH}
-
-# Modify Docker-Compose File to remove experiment folder bind mount
-echo
-$PWD/orchestration-scripts/remove_bind_mounts.py -e
+$PWD/orchestration-scripts/configure_docker_compose.py ${BASE_PORT} ${NUM_SITES} ${ROUNDS} ${EXPERIMENT_PATH}
 
 # Start Katsu & GraphQL-interface
 echo
@@ -202,7 +192,7 @@ echo "Sleeping for $SLEEP_TIME seconds to let Docker containers complete initial
 
 sleep ${SLEEP_TIME}
 
-TABLE_PATH="${DP_EXPERIMENT_PATH}helpers/"
+TABLE_PATH="${EXPERIMENT_PATH}helpers/"
 mkdir -p ${TABLE_PATH}
 
 # Ingest Data, if necessary
@@ -215,13 +205,13 @@ if [[ ${TO_INGEST} -eq 1 ]]; then
     # Ingest Data into one Table
     if [[ ${SAME_DATA} -eq 1 ]]; then
         echo
-        ingestion=$(bash $PWD/ingestion-scripts/init.sh -l -d ${SYNTHEA_PATH} ${PROJECT_NAME} ${DATASET_NAME} ${TABLE_NAME} mcodepacket | tee /dev/tty)
+        ingestion=$(bash $PWD/ingestion-scripts/init.sh -l -d ${DATASET_PATH} ${PROJECT_NAME} ${DATASET_NAME} ${TABLE_NAME} mcodepacket | tee /dev/tty)
 
         echo "$ingestion" | grep "TABLE_UUID" >> "${TABLE_PATH}tables.txt"
     else
         # Ingest Data into multiple Tables
         SITE_DIRS=()
-        DATA_LEN=$(($(ls -l ${SYNTHEA_PATH} | wc -l) - 1))
+        DATA_LEN=$(($(ls -l ${DATASET_PATH} | wc -l) - 1))
 
         # Copy Data into temporary folders
         if [[ ${DATA_LEN} -ge ${NUM_SITES} ]]; then
@@ -230,7 +220,7 @@ if [[ ${TO_INGEST} -eq 1 ]]; then
             done
 
             COUNTER=0
-            for i in ${SYNTHEA_PATH}*; do
+            for i in ${DATASET_PATH}*; do
                 cp "${i}" "${SITE_DIRS[COUNTER]}"
                 COUNTER=$((${COUNTER} + 1))
 
@@ -260,36 +250,6 @@ if [[ ${TO_INGEST} -eq 1 ]]; then
 
     sleep ${SLEEP_TIME}
 fi
-
-# Add Experiment to Containers
-echo
-docker-compose up -d
-
-## Kill All Running FL-* containers
-echo "Killing all running fl-* containers. This is done to add the experiment folder to the containers"
-all_containers="$(docker ps -a | grep fl- | awk '{print $1;}')"
-docker kill ${all_containers} 1>/dev/null
-
-## Create Temp Directory
-temp_folder="$(mktemp -d)"
-
-## Transfer Files from Federated Experiment to Temp Folder
-for file in ${ORIGINAL_EXPERIMENT_PATH}*; do
-    cp -r "${file}" "${temp_folder}"
-done
-
-## Transfer Files from Diff-Priv Experiment to Temp Folder
-for file in ${DP_EXPERIMENT_PATH}*; do
-    cp -r "${file}" "${temp_folder}"
-done
-
-## Transfer Temp Folder to all fl-* Containers
-for container in ${all_containers}; do
-    docker cp "${temp_folder}" "${container}:/src/experiment"
-done
-
-## Delete Temp Folder
-rm -rf "${temp_folder}"
 
 # Start all services
 echo

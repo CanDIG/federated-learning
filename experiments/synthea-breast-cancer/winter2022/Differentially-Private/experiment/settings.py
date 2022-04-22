@@ -3,11 +3,11 @@ import os
 FL_N_CLASSES = 4
 FL_N_FEATURES = 7
 FL_EPOCHS = 10000
+FL_EPSILON = 0.85
 FL_MIN_CLIENTS = 2
 FL_RANDOM_STATE = 1729
 FL_TABLE_FILE = f"{os.getcwd()}/experiment/helpers/tables.txt"
-
-FL_EPSILON = 0.85
+FL_CHECKPOINT_PATH = 'experiment/checkpoints'
 
 FL_ROUNDS = int(os.getenv("ROUNDS", "100"))
 FL_CLIENT_NUMBER = os.getenv("FLOWER_CLIENT_NUMBER", "1")

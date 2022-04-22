@@ -20,7 +20,7 @@ You can run the experimental setup by ensuring you have a copy of the 10yrs Synt
 Eg. Let's say the 10yrs directory is in the root federated-learning folder. Then from the root federated-learning folder, perform:
 
 ```bash
-./experiments/synthea-breast-cancer/winter2022/Differentially-Private/quickstart.sh -i 10yrs/female -e <EXPERIMENT_PATH> -f <FEDERATED_EXPERIMENT_PATH>
+./experiments/synthea-breast-cancer/winter2022/Differentially-Private/quickstart.sh -i 10yrs/female -e <DP_EXPERIMENT_PATH> -f <ORIGINAL_EXPERIMENT_PATH>
 ```
 
 This will generate 2 clients and 1 server, alongside ingesting the 10yrs/female data into an instance of Katsu, accessible through the GraphQL-interface generated. This will take quite a long time, up to 35 minutes if ingesting the data as well.

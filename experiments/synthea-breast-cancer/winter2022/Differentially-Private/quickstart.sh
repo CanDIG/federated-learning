@@ -24,6 +24,7 @@ help ()
    # Display Help
    echo
    echo "NOTE: OPTIONS MUST PRECEDE ALL ARGUMENTS"
+   echo "NOTE: This script will create and then kill the fl-* containers, and will start them once more before exiting. This is done to add the proper experiment files to the container without needing to duplicate code between the original and dp experiment folders."
    echo "Starts an instance of the differentially-private federated-learning environment with sample data stored locally"
    echo "Start this program from the root directory of the federated-learning repo"
    echo
@@ -34,8 +35,8 @@ help ()
    echo "   -p <PORT>                      Specify Port Number to expose. Defaults to 5000"
    echo "   -n <SITES>                     Number of Sites to federate. Defaults to 2"
    echo "   -r <ROUNDS>                    Number of rounds of trials to conduct. Defaults to 100."
-   echo "   -e <EXPERIMENT_PATH>           Pass in the path to the experiment folder. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
-   echo "   -f <FEDERATED_EXPERIMENT_PATH> Pass in the path to the experiment folder of the federated trial. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
+   echo "   -e <DP_EXPERIMENT_PATH>        Pass in the path to the differentially-private experiment folder. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
+   echo "   -f <ORIGINAL_EXPERIMENT_PATH>  Pass in the path to the original non-differentially-private experiment folder of the federated trial. Defaults to ./experiment in the root folder. Ensure this path is either an absolute path, or that it starts with './'"
    echo "   -s                             Keep all of the data in one dataset - Useful only if -i specified"
    echo "   -h                             Display this help text"
 }
@@ -150,9 +151,9 @@ while getopts ":i:p:n:r:e:f:sh" opt; do
         ;;
     r)  ROUNDS=$(check_rounds ${OPTARG})
         ;;
-    e)  EXPERIMENT_PATH=$(check_path ${OPTARG})
+    e)  DP_EXPERIMENT_PATH=$(check_path ${OPTARG})
         ;;
-    f)  FEDERATED_EXPERIMENT_PATH=$(check_path ${OPTARG})
+    f)  ORIGINAL_EXPERIMENT_PATH=$(check_path ${OPTARG})
         ;;
     s)  SAME_DATA=1
         ;;
@@ -173,8 +174,8 @@ BASE_PORT=$(check_value ${BASE_PORT} 5000)
 NUM_SITES=$(check_value ${NUM_SITES} 2)
 TO_INGEST=$(check_value ${TO_INGEST} 0)
 ROUNDS=$(check_value ${ROUNDS} 100)
-EXPERIMENT_PATH=$(check_path $(check_value ${EXPERIMENT_PATH} ./experiment))
-FEDERATED_EXPERIMENT_PATH=$(check_path $(check_value ${FEDERATED_EXPERIMENT_PATH} ./experiment))
+DP_EXPERIMENT_PATH=$(check_path $(check_value ${DP_EXPERIMENT_PATH} ./experiment))
+ORIGINAL_EXPERIMENT_PATH=$(check_path $(check_value ${ORIGINAL_EXPERIMENT_PATH} ./experiment))
 
 # Display Arguments
 echo "The following values have been selected:"
@@ -182,12 +183,12 @@ echo "      INGESTION PATH: ${SYNTHEA_PATH}"
 echo "      NUMBER OF SITES: ${NUM_SITES}"
 echo "      BASE PORT: ${BASE_PORT}"
 echo "      NUMBER OF ROUNDS: ${ROUNDS}"
-echo "      EXPERIMENT PATH: ${EXPERIMENT_PATH}"
-echo "      FEDERATED EXPERIMENT PATH: ${FEDERATED_EXPERIMENT_PATH}"
+echo "      EXPERIMENT PATH: ${DP_EXPERIMENT_PATH}"
+echo "      FEDERATED EXPERIMENT PATH: ${ORIGINAL_EXPERIMENT_PATH}"
 
 # Create Docker-Compose File
 echo
-$PWD/orchestration-scripts/configure_docker_compose.py ${BASE_PORT} ${NUM_SITES} ${ROUNDS} ${EXPERIMENT_PATH}
+$PWD/orchestration-scripts/configure_docker_compose.py ${BASE_PORT} ${NUM_SITES} ${ROUNDS} ${DP_EXPERIMENT_PATH}
 
 # Modify Docker-Compose File to remove experiment folder bind mount
 echo
@@ -201,7 +202,8 @@ echo "Sleeping for $SLEEP_TIME seconds to let Docker containers complete initial
 
 sleep ${SLEEP_TIME}
 
-TABLE_PATH="${EXPERIMENT_PATH}helpers/"
+TABLE_PATH="${DP_EXPERIMENT_PATH}helpers/"
+mkdir -p ${TABLE_PATH}
 
 # Ingest Data, if necessary
 if [[ ${TO_INGEST} -eq 1 ]]; then
@@ -264,6 +266,7 @@ echo
 docker-compose up -d
 
 ## Kill All Running FL-* containers
+echo "Killing all running fl-* containers. This is done to add the experiment folder to the containers"
 all_containers="$(docker ps -a | grep fl- | awk '{print $1;}')"
 docker kill ${all_containers} 1>/dev/null
 
@@ -271,12 +274,12 @@ docker kill ${all_containers} 1>/dev/null
 temp_folder="$(mktemp -d)"
 
 ## Transfer Files from Federated Experiment to Temp Folder
-for file in ${FEDERATED_EXPERIMENT_PATH}*; do
+for file in ${ORIGINAL_EXPERIMENT_PATH}*; do
     cp -r "${file}" "${temp_folder}"
 done
 
 ## Transfer Files from Diff-Priv Experiment to Temp Folder
-for file in ${EXPERIMENT_PATH}*; do
+for file in ${DP_EXPERIMENT_PATH}*; do
     cp -r "${file}" "${temp_folder}"
 done
 

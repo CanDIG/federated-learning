@@ -16,7 +16,7 @@ if __name__ == "__main__":
     strategy = Strategy(
         min_available_clients=settings.FL_MIN_CLIENTS,
         eval_fn=get_eval_fn(),
-        on_fit_config_fn=lambda rnd: {"rnd": rnd} # Don't need named function to simply return round number in a dict instead of int
+        on_fit_config_fn=lambda rnd: {"rnd": rnd}
     )
 
     server_url = f'{settings.FL_INTERNAL_HOST}:{settings.FL_INTERNAL_PORT}'

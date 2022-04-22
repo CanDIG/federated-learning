@@ -91,6 +91,8 @@ Additionally, improvements should be made to the [GraphQL-interface](https://git
 
 The Flower framework for federated learning used by this repository will soon support communications over secure gRPC; this repository and/or its deployment should be upgraded accordingly.
 
+The `orchestration-scripts` folder has a dash in its name which makes it extremely hard to work with in Python. Consider renaming this folder with an underscore so that we can import between the files in the folder to reduce code duplication. We should also then move all unrelated code from a module into its own module (eg. move `copy_experiment_requirements` from `configure_docker_compose.py` into its own file and then import it into the original file).
+
 ### Improving differential privacy
 
 Suggestions for implementing a more thorough differential privacy setup are provided in `docs/FL_differential_privacy.md`.
